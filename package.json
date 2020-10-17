@@ -11,6 +11,7 @@
     "react-scripts": "3.4.3"
   },
   "scripts": {
+    "start-all": "react-scripts start && cd flask_api && ./env/bin/flask run --no-debugger",
     "start": "react-scripts start",
     "start-api": "cd flask_api && ./env/bin/flask run --no-debugger",
     "build": "react-scripts build",
