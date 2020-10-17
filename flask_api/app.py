@@ -1,9 +1,8 @@
-import time
 from flask import Flask
 
 app = Flask(__name__)
 
 
-@app.route("/test")
-def index():
-    return {"time": time.time()}
+@app.route("/hey")
+def test():
+    return {"hey": "Hello From Flask"}
