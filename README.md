@@ -34,7 +34,9 @@ and youre up and running !
 beautiful UI and ability to style post as we like to match the image / sentence
 
 # Tables and joins
-~~~mermaid
+
+
+```mermaid!
 classDiagram
     Users <|-- Comments
     Users <|-- Pearls
@@ -82,5 +84,5 @@ classDiagram
       +int id_smileys
       +int id_pearls
     }
-~~~
+```
      
