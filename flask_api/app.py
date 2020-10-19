@@ -11,3 +11,5 @@ db = SQLAlchemy(app)
 @app.route("/hey")
 def test():
     return {"hey": "😊 Hello From Flask 😊"}
+    # methods post & get
+
