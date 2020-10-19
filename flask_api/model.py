@@ -19,7 +19,7 @@ class User(db.Model):
     password = Column(String(50), nullable=False)
 
 
-class Pearls(db.Model):
+class Pearl(db.Model):
     __tablename__ = "PearlsAndJewels"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('User.id'))
@@ -27,7 +27,7 @@ class Pearls(db.Model):
     date = Column(DateTime, default=datetime.utcnow)
 
 
-class Comments(db.Model):
+class Comment(db.Model):
     __tablename__ = "Comments"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('User.id'))
@@ -35,7 +35,7 @@ class Comments(db.Model):
     comment = Column(String(200), nullable=False)
 
 
-class Smileys(db.Model):
+class Smiley(db.Model):
     __tablename__ = "Smileys"
     id = Column(Integer, primary_key=True)
     alt_name = Column(String(25), nullable=False)
