@@ -32,3 +32,53 @@ and youre up and running !
 
 # Plus
 beautiful UI and ability to style post as we like to match the image / sentence
+
+# Tables and joins
+classDiagram
+    Users <|-- Comments
+    Users <|-- Pearls
+    Pearls <|-- Comments
+    Associate <|-- Smileys
+    Associate <|-- Pearls
+    Associate <|-- Users
+    Users : +int id
+    Users : +String username
+    Users : +String login
+    Users : +String psw
+    Users: +create()
+    Users: +login()
+    Users: +update()
+    Users: +delete()
+
+    class Comments{
+      +int id
+      +int id_user
+      +int id_pearl
+      +String commentaire
+      +create()
+      +update()
+      +delete()
+    }
+    class Pearls{
+      +int id
+      +int id_user
+      +String content
+      +datetime date
+      +create()
+      +update()
+      +delete()
+    }
+    class Smileys{
+      +int id
+      +String alt_name
+      +String img_link
+      +create()
+      +delete()
+    }
+    class Associate{
+      +int id
+      +int id_users
+      +int id_smileys
+      +int id_pearls
+    }
+     
