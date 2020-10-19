@@ -1,7 +1,14 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, request, make_response, jsonify
 
-db = SQLAlchemy()
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///model.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+db = SQLAlchemy(app)
+
+class ExcetionInvalidUser(Exception):
+    pass
 
 class User(db.Model):
     __tablename__ = "Users"
