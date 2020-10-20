@@ -1,3 +1,4 @@
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Table, Column,String, Integer, ForeignKey, DateTime
 from datetime import datetime
@@ -6,7 +7,6 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///model.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
-
 
 # Tables of project
 
