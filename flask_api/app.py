@@ -1,4 +1,5 @@
 from flask import Flask, request, make_response, jsonify, session
+from flask_sqlalchemy import SQLAlchemy
 from model import *
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -36,11 +37,3 @@ def login():
     def logout(username):
         session.pop(username, None)
         return jsonify({'message': 'deconnected'}), 200
-
-@app.route('/profile/<username>', methods=["POST", "GET"]):
-    def profile(username):
-        if request.method == "GET":
-            if not session.get(username):
-                return jsonify({'error': 'No user logged in'}), 500
-            else:
-                return jsonify({'userinfo': 'No user logged in'}), 200 # Return information about the user
