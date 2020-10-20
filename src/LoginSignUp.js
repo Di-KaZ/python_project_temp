@@ -115,7 +115,7 @@ const FormField = styled.div`
   margin-bottom: 2rem;
 `;
 
-const LoginSignUp = () => {
+const LoginSignUp = ({ datas: [data, setData] }) => {
   const [status, setStatus] = useState("LOGIN");
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
@@ -123,6 +123,8 @@ const LoginSignUp = () => {
 
   const LoginFromFlask = (event) => {
     event.preventDefault();
+    console.log(data?.username);
+    if (!data.username) setData({ ...data, username: username });
     if (status === "SIGNUP") {
       fetch("/register", {
         method: "post",

@@ -35,7 +35,7 @@ def login():
 @app.route('/logout/<username>', methods=["POST"]):
     def logout(username):
         session.pop(username, None)
-        return jsonify({'message': 'deconnected'}), 200 # Return information about the user
+        return jsonify({'message': 'deconnected'}), 200
 
 @app.route('/profile/<username>', methods=["POST", "GET"]):
     def profile(username):
