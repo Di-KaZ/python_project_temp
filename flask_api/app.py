@@ -20,12 +20,11 @@ def register():
         db.session.add(User(username=logs['userName'], password=generate_password_hash(logs['password'])))
         db.session.commit()
         return jsonify({'message': 'Votre compte a ete cree'}), 200
-    except Exception as e:
-        return jsonify({"error", e}), 500
+    except:
+        return jsonify({"error": "une erreur est intervenue"}), 500
 
 @app.route("/login", methods=["POST"])
 def login():
-    print('hey')
     logs = request.get_json()
     user = db.session.query(User).filter(User.username == logs['userName']).first()
     if user and check_password_hash(user.password, logs['password']):
@@ -33,7 +32,7 @@ def login():
         return jsonify({'message': f'Connect as {user.username}'}), 200
     return jsonify({'message': 'username or password incorrect'}), 500
 
-@app.route('/logout/<username>', methods=["POST"]):
-    def logout(username):
-        session.pop(username, None)
-        return jsonify({'message': 'deconnected'}), 200
+@app.route('/logout/<username>', methods=["POST"])
+def logout(username):
+    session.pop(username, None)
+    return jsonify({'message': 'deconnected'}), 200

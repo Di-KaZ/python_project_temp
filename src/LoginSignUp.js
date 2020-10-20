@@ -123,8 +123,8 @@ const LoginSignUp = ({ datas: [data, setData] }) => {
 
   const LoginFromFlask = (event) => {
     event.preventDefault();
-    console.log(data?.username);
-    if (!data.username) setData({ ...data, username: username });
+    console.log("hAAAAAAA", data?.username);
+    if (!data?.username) setData({ ...data, username: userName });
     if (status === "SIGNUP") {
       fetch("/register", {
         method: "post",

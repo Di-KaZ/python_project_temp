@@ -16,7 +16,6 @@ class User(db.Model):
     __tablename__ = "Users"
     id = Column(Integer, primary_key=True)
     username = Column(String(25), unique=True, nullable=False)
-    login = Column(String(25), unique=True, nullable=False)
     password = Column(String(50), nullable=False)
 
 
