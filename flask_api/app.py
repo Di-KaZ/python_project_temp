@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 from flask import Flask, request, make_response, jsonify, session
-=======
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
->>>>>>> 70f86274e3f539c3debd812f4c862e7b844d6314
 from model import *
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
