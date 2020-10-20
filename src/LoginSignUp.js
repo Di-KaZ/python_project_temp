@@ -1,27 +1,16 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import bg from "./img/bg.jpg";
 import logo from "./img/logo.png";
-import { motion } from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
+import { useHistory } from "react-router-dom";
 
-const CenterContainer = styled.div`
+const CenterContainer = styled(motion.div)`
   width: 100vw;
   height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  backdrop-filter: blur(12px);
-`;
-
-const Bg = styled.img`
-  position: absolute;
-  z-index: -1;
-  top: 0;
-  left: 0;
-  object-fit: cover;
-  width: 100vw;
-  height: 100vh;
 `;
 
 const Logo = styled.img`
@@ -115,16 +104,23 @@ const FormField = styled.div`
   margin-bottom: 2rem;
 `;
 
-const LoginSignUp = ({ datas: [data, setData] }) => {
+const Message = styled(motion.p)`
+  font-size: 1.5rem;
+  text-align: center;
+  font-weight: bold;
+`;
+
+const LoginSignUp = () => {
   const [status, setStatus] = useState("LOGIN");
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [passwordBis, setPasswordBis] = useState("");
+  const [message, setMessage] = useState("");
+  const history = useHistory();
+  const messageAnim = useAnimation();
 
   const LoginFromFlask = (event) => {
     event.preventDefault();
-    console.log("hAAAAAAA", data?.username);
-    if (!data?.username) setData({ ...data, username: userName });
     if (status === "SIGNUP") {
       fetch("/register", {
         method: "post",
@@ -137,9 +133,7 @@ const LoginSignUp = ({ datas: [data, setData] }) => {
         }),
         headers: { "Content-Type": "application/json" },
       }).then((response) => {
-        response
-          .json()
-          .then((json) => window.alert(json.error || json.message));
+        response.json().then((json) => setMessage(json.error || json.message));
       });
     } else {
       fetch("/login", {
@@ -152,65 +146,81 @@ const LoginSignUp = ({ datas: [data, setData] }) => {
         }),
         headers: { "Content-Type": "application/json" },
       }).then((response) => {
-        response
-          .json()
-          .then((json) => window.alert(json.error || json.message));
+        response.json().then((json) => {
+          console.log(json);
+          if (json.message) {
+            history.push("/profile");
+          }
+          setMessage(json.error || json.message);
+          messageAnim.start({
+            x: [-10, 0, 10, 0],
+            transition: { duration: 0.2, loop: 2 },
+          });
+        });
       });
     }
   };
 
   return (
-    <>
-      <Bg src={bg} alt="bg" />
-      <CenterContainer>
-        <Form
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Logo src={logo} alt="lol" />
-          <LoginNavList>
-            <LoginNavItem status={status} setStatus={setStatus} value="LOGIN">
-              Connection
-            </LoginNavItem>
-            <LoginNavItem status={status} setStatus={setStatus} value="SIGNUP">
-              Nouveau ?
-            </LoginNavItem>
-          </LoginNavList>
-          <FormContainer>
+    <CenterContainer
+      initial={{
+        backdropFilter: "blur(0px)",
+        WebkitBackdropFilter: "blur(0px)",
+      }}
+      animate={{
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(0px)",
+      }}
+    >
+      <Form
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <Logo src={logo} alt="lol" />
+        <LoginNavList>
+          <LoginNavItem status={status} setStatus={setStatus} value="LOGIN">
+            Connection
+          </LoginNavItem>
+          <LoginNavItem status={status} setStatus={setStatus} value="SIGNUP">
+            Nouveau ?
+          </LoginNavItem>
+        </LoginNavList>
+        <FormContainer>
+          <FormField>
+            <Label>Nom d'utilisateur</Label>
+            <TextField
+              type="userName"
+              value={userName}
+              onChange={(event) => setUserName(event.target.value)}
+            />
+          </FormField>
+          <FormField>
+            <Label>Mot de passe</Label>
+            <TextField
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </FormField>
+          {status === "SIGNUP" && (
             <FormField>
-              <Label>Nom d'utilisateur</Label>
-              <TextField
-                type="userName"
-                value={userName}
-                onChange={(event) => setUserName(event.target.value)}
-              />
-            </FormField>
-            <FormField>
-              <Label>Mot de passe</Label>
+              <Label>Confirmer</Label>
               <TextField
                 type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                value={passwordBis}
+                onChange={(event) => setPasswordBis(event.target.value)}
               />
             </FormField>
-            {status === "SIGNUP" && (
-              <FormField>
-                <Label>Confirmer</Label>
-                <TextField
-                  type="password"
-                  value={passwordBis}
-                  onChange={(event) => setPasswordBis(event.target.value)}
-                />
-              </FormField>
-            )}
-            <LogButton onClick={(e) => LoginFromFlask(e)}>
-              {status === "SIGNUP" ? "J'ai fini !" : "connection"}
-            </LogButton>
-          </FormContainer>
-        </Form>
-      </CenterContainer>
-    </>
+          )}
+          <Message initial={{ x: 0 }} animate={messageAnim}>
+            {message}
+          </Message>
+          <LogButton onClick={(e) => LoginFromFlask(e)}>
+            {status === "SIGNUP" ? "J'ai fini !" : "connection"}
+          </LogButton>
+        </FormContainer>
+      </Form>
+    </CenterContainer>
   );
 };
 
