@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import Cookies from "js-cookie";
 import styled from "styled-components";
+import useLogin from "./useLogin";
 
 const CenterContainer = styled.div`
   width: 100vw;
@@ -13,14 +14,23 @@ const CenterContainer = styled.div`
 `;
 
 const Profile = () => {
-  const history = useHistory();
-  const [username, setUsername] = useState(Cookies.get("session"));
+  const token = useLogin();
   useEffect(() => {
-    if (username === undefined || !username) history.push("/login");
+    fetch("/profile", {
+      method: "post",
+      credentials: "include",
+      cache: "no-cache",
+      body: JSON.stringify({
+        token: token,
+      }),
+      headers: { "Content-Type": "application/json" },
+    }).then((response) => {
+      /* TODO SHOW USER INFO */
+    });
   }, []);
   return (
     <CenterContainer>
-      <p style={{ color: "white" }}>{username}</p>
+      <p style={{ color: "white" }}></p>
     </CenterContainer>
   );
 };

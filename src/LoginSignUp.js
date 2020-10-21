@@ -147,7 +147,6 @@ const LoginSignUp = () => {
         headers: { "Content-Type": "application/json" },
       }).then((response) => {
         response.json().then((json) => {
-          console.log(json);
           if (json.message) {
             history.push("/profile");
           }

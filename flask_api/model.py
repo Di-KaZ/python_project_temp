@@ -17,6 +17,13 @@ class User(db.Model):
     id = Column(Integer, primary_key=True)
     username = Column(String(25), unique=True, nullable=False)
     password = Column(String(50), nullable=False)
+    def getUserFromToken(token, secret_key):
+        try:
+            username = jwt.decode(token, secret_key)
+            user = db.session.query(User).filter(User.username == username['user']).first()
+            return user
+        except:
+            return None
 
 
 class Pearl(db.Model):
