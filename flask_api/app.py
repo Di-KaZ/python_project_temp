@@ -15,10 +15,6 @@ app.config['SECRET_KEY'] = 'configurestrongsecretkeyhere'
 
 db = SQLAlchemy(app)
 
-"""
-wrapper used to protect route that need the user to be logged in
-"""
-
 @app.route("/check_token", methods=["POST"])
 def check_login(*args, **kwargs):
     logs = request.get_json()
@@ -27,8 +23,12 @@ def check_login(*args, **kwargs):
             jwt.decode(logs['token'], app.config['SECRET_KEY'])
         except:
             return jsonify({"error": "token is invalid"}), 401
-    return jsonify({"meaage": "token is valid"}), 401
+    return jsonify({"message": "token is valid"}), 200
 
+
+"""
+wrapper used to protect route that need the user to be logged in
+"""
 def loggin_required(f):
     @wraps(f)
     def check_login(*args, **kwargs):
@@ -73,8 +73,8 @@ def logout():
 @loggin_required
 def profile():
     data = request.get_json()
-    user = User.getUserFromToken(data['token'], app.config['SECRET_KEY'])
+    user = User.getUserFromToken(data, app.config['SECRET_KEY'])
     if user:
         return jsonify({'username': user.username,'password': user.password}), 200
     else:
-        return jsonify({'error': 'wtf'}), 401
+        return jsonify({'error': 'unexcpected error '}), 401

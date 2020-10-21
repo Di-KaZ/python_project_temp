@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Table, Column,String, Integer, ForeignKey, DateTime
 from datetime import datetime
+import jwt
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///model.db"
@@ -17,9 +18,9 @@ class User(db.Model):
     id = Column(Integer, primary_key=True)
     username = Column(String(25), unique=True, nullable=False)
     password = Column(String(50), nullable=False)
-    def getUserFromToken(token, secret_key):
+    def getUserFromToken(data, secret_key):
         try:
-            username = jwt.decode(token, secret_key)
+            username = jwt.decode(data['token'], secret_key)
             user = db.session.query(User).filter(User.username == username['user']).first()
             return user
         except:

@@ -14,7 +14,9 @@ const CenterContainer = styled.div`
 `;
 
 const Profile = () => {
+  const [profile, setProfile] = useState();
   const token = useLogin();
+
   useEffect(() => {
     fetch("/profile", {
       method: "post",
@@ -25,12 +27,13 @@ const Profile = () => {
       }),
       headers: { "Content-Type": "application/json" },
     }).then((response) => {
-      /* TODO SHOW USER INFO */
+      response.json().then((json) => setProfile(json));
     });
   }, []);
   return (
     <CenterContainer>
-      <p style={{ color: "white" }}></p>
+      <p style={{ color: "white" }}>{profile?.username}</p>
+      <p style={{ color: "white" }}>{profile?.password}</p>
     </CenterContainer>
   );
 };
