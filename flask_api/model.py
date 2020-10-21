@@ -18,6 +18,7 @@ class User(db.Model):
     id = Column(Integer, primary_key=True)
     username = Column(String(25), unique=True, nullable=False)
     password = Column(String(50), nullable=False)
+    date_creation = Column(DateTime, default=datetime.utcnow)
     def getUserFromToken(data, secret_key):
         try:
             username = jwt.decode(data['token'], secret_key)

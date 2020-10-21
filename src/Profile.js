@@ -3,6 +3,7 @@ import { useHistory } from "react-router-dom";
 import Cookies from "js-cookie";
 import styled from "styled-components";
 import useLogin from "./useLogin";
+import { Button } from "./StyledElem";
 
 const CenterContainer = styled.div`
   width: 100vw;
@@ -11,11 +12,35 @@ const CenterContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  backdrop-filter: blur(12px);
+  --webkit-backdrop-filter: blur(12px);
+`;
+
+const Card = styled.div`
+  width: 80vw;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #2d4059e6;
+`;
+
+const Fields = styled.h4`
+  color: white;
+  text-transform: uppercase;
+`;
+
+const Values = styled.h3`
+  color: white;
+  text-transform: uppercase;
+  font-weight: 300;
 `;
 
 const Profile = () => {
   const [profile, setProfile] = useState();
   const token = useLogin();
+  const history = useHistory();
 
   useEffect(() => {
     fetch("/profile", {
@@ -32,8 +57,20 @@ const Profile = () => {
   }, []);
   return (
     <CenterContainer>
-      <p style={{ color: "white" }}>{profile?.username}</p>
-      <p style={{ color: "white" }}>{profile?.password}</p>
+      <Card>
+        <Fields>Nom d'utilisateur</Fields>
+        <Values>{profile?.username}</Values>
+        <Fields>Date de creation du compte</Fields>
+        <Values>{profile?.date_creation}</Values>
+        <Button
+          onClick={() => {
+            Cookies.remove("token");
+            history.push("/login");
+          }}
+        >
+          Se deconnecter
+        </Button>
+      </Card>
     </CenterContainer>
   );
 };

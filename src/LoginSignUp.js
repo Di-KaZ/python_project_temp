@@ -3,6 +3,7 @@ import styled from "styled-components";
 import logo from "./img/logo.png";
 import { motion, useAnimation } from "framer-motion";
 import { useHistory } from "react-router-dom";
+import { Button } from "./StyledElem";
 
 const CenterContainer = styled(motion.div)`
   width: 100vw;
@@ -64,22 +65,6 @@ const LoginLi = styled.li`
   text-transform: uppercase;
   padding-bottom: 5px;
   cursor: pointer;
-`;
-
-const LogButton = styled.button`
-  margin-top: 2rem;
-  background-color: #d41717;
-  color: white;
-  padding: 15px;
-  border: none;
-  border-radius: 0;
-  width: 200px;
-  height: fit-content;
-  align-self: center;
-  text-transform: uppercase;
-  &:focus {
-    outline: none;
-  }
 `;
 
 const Label = styled.h4`
@@ -214,9 +199,9 @@ const LoginSignUp = () => {
           <Message initial={{ x: 0 }} animate={messageAnim}>
             {message}
           </Message>
-          <LogButton onClick={(e) => LoginFromFlask(e)}>
+          <Button onClick={(e) => LoginFromFlask(e)}>
             {status === "SIGNUP" ? "J'ai fini !" : "connection"}
-          </LogButton>
+          </Button>
         </FormContainer>
       </Form>
     </CenterContainer>

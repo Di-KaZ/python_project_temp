@@ -64,17 +64,12 @@ def login():
         return response
     return jsonify({'error': 'username or password incorrect'}), 500
 
-@app.route('/logout/', methods=["POST"])
-@loggin_required
-def logout():
-    return jsonify({'message': 'deconnected'}), 200
-
 @app.route('/profile', methods=["POST"])
 @loggin_required
 def profile():
     data = request.get_json()
     user = User.getUserFromToken(data, app.config['SECRET_KEY'])
     if user:
-        return jsonify({'username': user.username,'password': user.password}), 200
+        return jsonify({'username': user.username,'password': user.password, 'date_creation': user.date_creation}), 200
     else:
         return jsonify({'error': 'unexcpected error '}), 401
