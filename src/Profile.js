@@ -17,11 +17,11 @@ const CenterContainer = styled.div`
 `;
 
 const Card = styled.div`
-  width: 80vw;
-  height: 80vh;
+  padding: 50px;
+  width: 100vw;
+  height: 100vh;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
   background-color: #2d4059e6;
 `;
@@ -32,13 +32,21 @@ const Fields = styled.h4`
 `;
 
 const Values = styled.h3`
-  color: white;
+  margin-left: 15px;
+  color: #d41717;
   text-transform: uppercase;
-  font-weight: 300;
+  font-weight: bold;
+`;
+
+const Title = styled.h2`
+  color: #d41717;
+  text-transform: uppercase;
+  font-weight: bold;
 `;
 
 const Profile = () => {
   const [profile, setProfile] = useState();
+  const [buttonText, setButtonText] = useState("Supprimer le compte");
   const token = useLogin();
   const history = useHistory();
 
@@ -55,21 +63,62 @@ const Profile = () => {
       response.json().then((json) => setProfile(json));
     });
   }, []);
+
+  const logOut = () => {
+    Cookies.remove("token");
+    history.push("/login");
+  };
+
+  const deleteAccount = () => {
+    fetch("/delete_account", {
+      method: "post",
+      credentials: "include",
+      cache: "no-cache",
+      body: JSON.stringify({
+        token: token,
+      }),
+      headers: { "Content-Type": "application/json" },
+    }).then((response) => {
+      response.json().then((json) => {
+        setButtonText(json.error);
+        json.message && history.push("/login");
+      });
+    });
+  };
+
   return (
     <CenterContainer>
       <Card>
-        <Fields>Nom d'utilisateur</Fields>
-        <Values>{profile?.username}</Values>
-        <Fields>Date de creation du compte</Fields>
-        <Values>{profile?.date_creation}</Values>
-        <Button
-          onClick={() => {
-            Cookies.remove("token");
-            history.push("/login");
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "column",
           }}
         >
-          Se deconnecter
-        </Button>
+          <Title>Informations</Title>
+          <div style={{ display: "flex" }}>
+            <Fields>Nom d'utilisateur</Fields>
+            <Values>{profile?.username}</Values>
+          </div>
+          <div style={{ display: "flex" }}>
+            <Fields>Date de creation du compte</Fields>
+            <Values>{profile?.date_creation}</Values>
+          </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "column",
+          }}
+        >
+          <Title>Actions</Title>
+          <Button onClick={logOut}>Se deconnecter</Button>
+          <Button onClick={deleteAccount}>{buttonText}</Button>
+        </div>
       </Card>
     </CenterContainer>
   );
