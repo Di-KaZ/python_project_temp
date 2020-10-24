@@ -17,9 +17,10 @@ const CenterContainer = styled.div`
 `;
 
 const Card = styled.div`
+  margin-top: 50px;
   padding: 50px;
-  width: 100vw;
-  height: 100vh;
+  width: 80vw;
+  height: 80vh;
   display: flex;
   justify-content: space-evenly;
   align-items: center;
@@ -47,7 +48,7 @@ const Title = styled.h2`
 const Profile = () => {
   const [profile, setProfile] = useState();
   const [buttonText, setButtonText] = useState("Supprimer le compte");
-  const token = useLogin();
+  const [token] = useLogin();
   const history = useHistory();
 
   useEffect(() => {
@@ -81,7 +82,6 @@ const Profile = () => {
     }).then((response) => {
       response.json().then((json) => {
         setButtonText(json.error);
-        json.message && history.push("/login");
       });
     });
   };

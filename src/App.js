@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import LoginSignUp from "./LoginSignUp";
 import Profile from "./Profile";
 import { Switch, Route } from "react-router-dom";
 import Navbar from "./Navbar";
 import styled from "styled-components";
 import bg from "./img/bg.jpg";
+import useLogin from "./useLogin";
+import Home from "./Home";
 
 const Bg = styled.img`
   position: absolute;
@@ -17,16 +19,18 @@ const Bg = styled.img`
 `;
 
 const App = () => {
+  const [, isLogged, setIsLogged] = useLogin();
   return (
     <>
+      {!isLogged && <LoginSignUp setLogged={setIsLogged} />}
       <Navbar />
       <Bg src={bg} alt="bg" />
       <Switch>
-        <Route exact path="/login">
-          <LoginSignUp />
-        </Route>
-        <Route path="/profile">
+        <Route exact path="/profile">
           <Profile />
+        </Route>
+        <Route exact path="/">
+          <Home />
         </Route>
       </Switch>
     </>

@@ -44,14 +44,14 @@ const Navbar = () => {
   const history = useHistory();
 
   return (
-    <NavContainer animate={{ opacity: location.pathname == "/login" ? 0 : 1 }}>
+    <NavContainer animate={{ opacity: location.pathname === "/login" ? 0 : 1 }}>
       <Logo src={logo} alt="logo" />
       <NavList>
         <NavItem
           style={{
-            borderBottom: location.pathname === "/home" && "2px solid #d41717",
+            borderBottom: location.pathname === "/" && "2px solid #d41717",
           }}
-          onClick={() => history.push("/home")}
+          onClick={() => history.push("/")}
         >
           Acceuil
         </NavItem>

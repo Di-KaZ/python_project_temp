@@ -12,6 +12,10 @@ const CenterContainer = styled(motion.div)`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  position: fixed;
+  z-index: 100;
+  top: 0px;
+  left: 0px;
 `;
 
 const Logo = styled.img`
@@ -95,14 +99,14 @@ const Message = styled(motion.p)`
   font-weight: bold;
 `;
 
-const LoginSignUp = () => {
+const LoginSignUp = ({ setLogged }) => {
   const [status, setStatus] = useState("LOGIN");
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [passwordBis, setPasswordBis] = useState("");
   const [message, setMessage] = useState("");
-  const history = useHistory();
   const messageAnim = useAnimation();
+  const history = useHistory();
 
   const LoginFromFlask = (event) => {
     event.preventDefault();
@@ -132,14 +136,16 @@ const LoginSignUp = () => {
         headers: { "Content-Type": "application/json" },
       }).then((response) => {
         response.json().then((json) => {
-          if (json.message) {
-            history.push("/profile");
+          if (json.error) {
+            setMessage(json.error);
+            messageAnim.start({
+              x: [-10, 0, 10, 0],
+              transition: { duration: 0.2, loop: 2 },
+            });
+          } else {
+            setLogged(true);
+            history.push("/");
           }
-          setMessage(json.error || json.message);
-          messageAnim.start({
-            x: [-10, 0, 10, 0],
-            transition: { duration: 0.2, loop: 2 },
-          });
         });
       });
     }
@@ -148,12 +154,12 @@ const LoginSignUp = () => {
   return (
     <CenterContainer
       initial={{
-        backdropFilter: "blur(0px)",
-        WebkitBackdropFilter: "blur(0px)",
+        backdropFilter: "blur(0px) opacity(0)",
+        WebkitBackdropFilter: "blur(0px) opacity(0)",
       }}
       animate={{
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(0px)",
+        backdropFilter: "blur(12px) opacity(0.5)",
+        WebkitBackdropFilter: "blur(0px) opacity(0.5)",
       }}
     >
       <Form

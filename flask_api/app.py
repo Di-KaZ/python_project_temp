@@ -24,13 +24,6 @@ class User(db.Model):
     username = Column(String(25), unique=True, nullable=False)
     password = Column(String(50), nullable=False)
     date_creation = Column(DateTime, default=datetime.utcnow)
-    def getUserFromToken(data, secret_key):
-        try:
-            username = jwt.decode(data['token'], secret_key)
-            user = db.session.query(User).filter(User.username == username['user']).first()
-            return user
-        except:
-            return None
 
 
 class Pearl(db.Model):
@@ -62,6 +55,13 @@ class Associations(db.Model):
     smiley_id = Column(Integer, ForeignKey('Smileys.id'), primary_key=True)
     pearl_id = Column(Integer, ForeignKey('PearlsAndJewels.id'), primary_key=True)
 
+def get_user_from_token(token, secret_key):
+    try:
+        username = jwt.decode(token, secret_key)
+        user = db.session.query(User).filter(User.username == username['user']).first()
+        return user
+    except:
+        return None
 
 @app.route("/check_token", methods=["POST"])
 def check_login(*args, **kwargs):
@@ -113,25 +113,23 @@ def login():
     return jsonify({'error': 'username or password incorrect'}), 500
 
 @app.route('/profile', methods=["POST"])
-@login_required
 def profile():
     data = request.get_json()
-    user = User.getUserFromToken(data, app.config['SECRET_KEY'])
-    if user:
+    try:
+        user = get_user_from_token(data['token'], app.config['SECRET_KEY'])
         return jsonify({'username': user.username,'password': user.password, 'date_creation': user.date_creation}), 200
-    else:
+    except Exception as e:
         return jsonify({'error': 'unexcpected error '}), 401
 
 @app.route('/delete_account', methods=["POST"])
 @login_required
 def delete_account():
     data = request.get_json()
-    user = User.getUserFromToken(data, app.config['SECRET_KEY'])
+    user = get_user_from_token(data['token'], app.config['SECRET_KEY'])
     try:
         if user:
             db.session.delete(user)
             db.session.commit()
             return jsonify({'message': 'account deleted !'}), 200
     except Exception as e:
-        print(str(e))
         return jsonify({'error': 'unexcpected error '}), 401

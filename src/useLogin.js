@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import { useHistory } from "react-router-dom";
-
 const useLogin = () => {
   const [token] = useState(Cookies.get("token"));
-  const history = useHistory();
+  const [isLogged, setIsLogged] = useState(false);
+
   useEffect(() => {
-    fetch("/profile", {
+    fetch("/check_token", {
       method: "post",
       credentials: "include",
       cache: "no-cache",
@@ -16,13 +15,13 @@ const useLogin = () => {
       headers: { "Content-Type": "application/json" },
     }).then((response) => {
       response.json().then((json) => {
-        if (token === undefined || token === null || "error" in json)
-          history.push("/login");
+        if (!(token === undefined || token === null || "error" in json))
+          setIsLogged(true);
       });
     });
   }, []);
 
-  return token;
+  return [token, isLogged, setIsLogged];
 };
 
 export default useLogin;
