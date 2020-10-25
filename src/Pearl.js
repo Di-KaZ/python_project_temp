@@ -83,36 +83,47 @@ const CommentButton = styled.button`
 `;
 
 const MessageInput = styled.textarea`
+  margin-top: 15px;
   background-color: #2d4059;
   border: none;
   color: white;
   width: 500px;
   height: 100px;
   text-align: left;
+  font-size: 20px;
   ::placeholder {
     color: white;
+    font-size: 20px;
+    text-align: center;
   }
   &:focus {
     outline: none;
   }
-  font-size: 15px;
   :-webkit-scrollbar {
     display: none;
   }
   -ms-overflow-style: none;
   scrollbar-width: none;
+  resize: none;
 `;
 
 const Message = (props) => {
-  return <MessageInput maxLength={300} placeholder={"Ecrit ici"} {...props} />;
+  return (
+    <MessageInput maxLength={300} placeholder={"Dis nous tout"} {...props} />
+  );
 };
 
-const Response = ({ parent_id, type }) => {
+const Response = ({ parent_id, type, setOpen }) => {
   const [message, setMessage] = useState("");
 
   const writer = (e) => {
     e.preventDefault();
     setMessage(e.target.value);
+  };
+
+  const send_comment = () => {
+    // TODO send comment
+    setOpen(false);
   };
 
   return (
@@ -126,7 +137,6 @@ const Response = ({ parent_id, type }) => {
         alignItems: "center",
       }}
     >
-      <h3>Écrire un commentaire</h3>
       <div style={{ display: "flex", flexDirection: "column" }}>
         <Message
           key="message"
@@ -138,12 +148,13 @@ const Response = ({ parent_id, type }) => {
           value={message}
         ></Message>
         <CommentButton
+          onClick={send_comment}
           style={{
             backgroundColor: "#d41717",
             width: "max-content",
             borderRadius: 0,
-            alignSelf: "flex-end",
             margin: 0,
+            marginBottom: "15px",
           }}
         >
           Terminé
@@ -155,6 +166,7 @@ const Response = ({ parent_id, type }) => {
 
 const Comment = ({ id, user, message }) => {
   const [open, setOpen] = useState(false);
+  const [openResponse, setOpenResponse] = useState(false);
 
   const Container = styled.div`
     margin-top: 20px;
@@ -178,6 +190,20 @@ const Comment = ({ id, user, message }) => {
       >
         {open ? "Cacher les reponses" : "Voir les reponses"}
       </CommentButton>
+      <CommentButton
+        style={{
+          marginLeft: "15px",
+          fontSize: "12px",
+          padding: "2px",
+          width: "fit-content",
+        }}
+        onClick={() => setOpenResponse(true)}
+      >
+        Un truc a dire ?
+      </CommentButton>
+      {openResponse && (
+        <Response parent_id={id} type={"comment"} setOpen={setOpenResponse} />
+      )}
       {
         /* TODO remove this and use requests */ open && (
           <Comment id={id} user={user} message={message} />
@@ -213,8 +239,14 @@ const Pearl = ({ data }) => {
           ))}
         </SmileyContainer>
       </Top>
+      {openResponse && (
+        <Response
+          parent_id={data.id}
+          type={"pearl"}
+          setOpen={setOpenResponse}
+        />
+      )}
       <div style={{ display: "flex" }}>
-        {openResponse && <Response />}
         <CommentButton onClick={fetch_comments}>
           {open ? "Cacher les commentaires" : "Voir les commentaires"}
         </CommentButton>
@@ -222,8 +254,7 @@ const Pearl = ({ data }) => {
           <CommentButton onClick={() => setOpenResponse(!openResponse)}>
             Un truc a dire ?
           </CommentButton>
-        )}{" "}
-        // TODO ouais ta pas fini
+        )}
       </div>
       {open &&
         data?.comments?.map((comment, i) => (
