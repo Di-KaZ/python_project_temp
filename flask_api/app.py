@@ -101,7 +101,7 @@ def register():
     except:
         return jsonify({"error": "une erreur est intervenue"}), 500
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["POST"])
 def login():
     logs = request.get_json()
     user = db.session.query(User).filter(User.username == logs['userName']).first()
