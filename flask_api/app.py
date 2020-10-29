@@ -75,7 +75,7 @@ def check_login(*args, **kwargs):
 
 
 """
-wrapper used to protect route that need the user to be logged in
+ * wrapper used to protect route that need the user to be logged in
 """
 def login_required(f):
     @wraps(f)
