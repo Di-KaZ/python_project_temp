@@ -1,6 +1,6 @@
 from flask import Flask, request, make_response, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Table, Column, String, Integer, ForeignKey, DateTime
+from sqlalchemy import Table, Column, String, Integer, ForeignKey, DateTime, orm
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import jwt
@@ -49,6 +49,7 @@ class User(db.Model):
     username = Column(String(25), unique=True, nullable=False)
     password = Column(String(50), nullable=False)
     date_creation = Column(DateTime, default=datetime.utcnow)
+    list_privileges = []
 
     # Connection to the database
     conn = create_connection(database_name)
@@ -61,7 +62,6 @@ class User(db.Model):
     def get_privilege_user(self):
         tab_privileges = []
         cur = self.conn.cursor()
-
         cur.execute("""SELECT type, grants.name_grant, grants.id
                             FROM USERS
                                 inner join Association_User on USERS.id=Association_User.user_id
@@ -89,6 +89,15 @@ class User(db.Model):
                 self.list_roles_and_rights(row[2], privileges)
             else:
                 privileges.append(row[1])
+
+    #
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        self.list_privileges = self.get_privilege_user()
+
+    @orm.reconstructor
+    def initOnLoad(self):
+        self.list_privileges = self.get_privilege_user()
 
 
 
@@ -150,8 +159,6 @@ def get_user_from_token(token, secret_key):
         return user
     except:
         return None
-
-
 
 
 @app.route("/check_token", methods=["POST"])
@@ -276,6 +283,12 @@ def load_static_grants():
     insert_without_integrity_check("insert into GRANTS values (20,'Privilege','Delete one user','')")
     insert_without_integrity_check("insert into GRANTS values (21,'Privilege','Ban User','')")
     insert_without_integrity_check("insert into GRANTS values (22, 'Privilege','API Access','')")
+    insert_without_integrity_check("insert into GRANTS values (23, 'Privilege','View Pearls','')")
+    insert_without_integrity_check("insert into GRANTS values (24, 'Privilege','View his Pearl','')")
+    insert_without_integrity_check("insert into GRANTS values (25, 'Privilege','View his Profile','')")
+    insert_without_integrity_check("insert into GRANTS values (26, 'Privilege','View Profiles','')")
+    insert_without_integrity_check("insert into GRANTS values (27, 'Privilege','View Comments','')")
+    insert_without_integrity_check("insert into GRANTS values (28, 'Privilege','View his Comment','')")
 
 # Insert of role and privileges in Grants table
 # Table ASSO_GRANTS Load
@@ -297,6 +310,12 @@ def load_static_grants():
     insert_without_integrity_check("insert into Association_Grant values (1, 13)")
     insert_without_integrity_check("insert into Association_Grant values (1, 14)")
     insert_without_integrity_check("insert into Association_Grant values (1, 15)")
+    insert_without_integrity_check("insert into Association_Grant values (1, 23)")
+    insert_without_integrity_check("insert into Association_Grant values (1, 24)")
+    insert_without_integrity_check("insert into Association_Grant values (1, 25)")
+    insert_without_integrity_check("insert into Association_Grant values (1, 26)")
+    insert_without_integrity_check("insert into Association_Grant values (1, 27)")
+    insert_without_integrity_check("insert into Association_Grant values (1, 28)")
 
 ## Moderator
     insert_without_integrity_check("insert into Association_Grant values (2, 16)")
@@ -324,7 +343,7 @@ if retunAdminQuery == 0:
     db.session.add(asso_user)
     db.session.commit()
 
-#
 
 toto = db.session.query(User).filter_by(username='Admin').first()
-pprint(toto.get_privilege_user())
+pprint(toto.list_privileges)
+
