@@ -8,7 +8,9 @@ from functools import wraps
 import sqlite3
 from pprint import pprint
 
+# Database name
 database_name = "model.db"
+
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + database_name
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -60,11 +62,11 @@ class User(db.Model):
         tab_privileges = []
         cur = self.conn.cursor()
 
-        cur.execute("""SELECT type, grants.name, grants.id
-                            FROM USER
-                                inner join Association_User on USER.id=Association_User.id_user
-                                inner join GRANTS on GRANTS.id=Association_User.id_granted 
-                            WHERE user.id=""" + str(self.id))
+        cur.execute("""SELECT type, grants.name_grant, grants.id
+                            FROM USERS
+                                inner join Association_User on USERS.id=Association_User.user_id
+                                inner join GRANTS on GRANTS.id=Association_User.granted_id
+                            WHERE users.id=""" + str(self.id))
         rows = cur.fetchall()
         for row in rows:
             if row[0] == "Role":
@@ -73,13 +75,14 @@ class User(db.Model):
                 tab_privileges.append(row[1])
         return tab_privileges
 
+    # Method list privileges and roles associated for specific user
     def list_roles_and_rights(self, id_role, privileges):
         cur = self.conn.cursor()
-        cur.execute("""SELECT grants_grantee.name, grants_granted.name, grants_granted.id, grants_granted.type
+        cur.execute("""SELECT grants_grantee.name_grant, grants_granted.name_grant, grants_granted.id, grants_granted.type
                     FROM Association_Grant
-                        inner join GRANTS as grants_grantee on grants_grantee.id = Association_Grant.id_grantee
-                        inner join GRANTS as grants_granted on grants_granted.id = Association_Grant.id_granted
-                    WHERE id_grantee=""" + str(id_role))
+                        inner join GRANTS as grants_grantee on grants_grantee.id = Association_Grant.grantee_id
+                        inner join GRANTS as grants_granted on grants_granted.id = Association_Grant.granted_id
+                    WHERE grantee_id=""" + str(id_role))
         rows = cur.fetchall()
         for row in rows:
             if row[3] == "Role":
@@ -200,6 +203,7 @@ def login():
         return response
     return jsonify({'error': 'username or password incorrect'}), 500
 
+
 @app.route('/profile', methods=["POST"])
 def profile():
     data = request.get_json()
@@ -208,6 +212,7 @@ def profile():
         return jsonify({'username': user.username,'password': user.password, 'date_creation': user.date_creation}), 200
     except Exception as e:
         return jsonify({'error': 'unexcpected error '}), 401
+
 
 @app.route('/delete_account', methods=["POST"])
 @login_required
@@ -224,6 +229,7 @@ def delete_account():
 
 
 """
+*** Invironment config
 *** If tables doesn't exists, create it
 """
 # Doc sqlalchemy : "Conditional by default, will not attempt to recreate tables already present in the target database."
@@ -232,6 +238,7 @@ db.create_all()
 """
 *** Load statics roles configuration if needed
 """
+
 
 def insert_without_integrity_check(text_insert):
     conn = create_connection(database_name)
@@ -308,3 +315,16 @@ load_static_grants()
 """
 *** Create admin user if not exist
 """
+retunAdminQuery = db.session.query(User).filter_by(username='Admin').count()
+if retunAdminQuery == 0:
+    user_admin = User(username='Admin', password=generate_password_hash('chbtfybj5nj'))
+    db.session.add(user_admin)
+    roleAdmin = db.session.query(Grant).filter_by(name_grant='Administrator').first()
+    asso_user = AssoUser(user_id=user_admin.id, granted_id=roleAdmin.id)
+    db.session.add(asso_user)
+    db.session.commit()
+
+#
+
+toto = db.session.query(User).filter_by(username='Admin').first()
+pprint(toto.get_privilege_user())
