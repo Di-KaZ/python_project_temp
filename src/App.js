@@ -7,6 +7,7 @@ import styled from "styled-components";
 import bg from "./img/bg.jpg";
 import useLogin from "./useLogin";
 import Home from "./Home";
+import Search from "./Search";
 
 const Bg = styled.img`
   position: absolute;
@@ -31,6 +32,9 @@ const App = () => {
         </Route>
         <Route exact path="/">
           <Home />
+        </Route>
+        <Route exact path="/search">
+          <Search />
         </Route>
       </Switch>
     </>
