@@ -14,9 +14,11 @@
     "react": "^16.14.0",
     "react-cookie": "^4.0.3",
     "react-dom": "^16.14.0",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.3",
     "shards-react": "^1.0.3",
-    "styled-components": "^5.2.0"
+    "styled-components": "^5.2.0",
+    "yarn": "^1.22.10"
   },
   "scripts": {
     "start-all": "react-scripts start && cd flask_api && ./env/bin/flask run --no-debugger",

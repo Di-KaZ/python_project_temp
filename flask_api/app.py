@@ -1,5 +1,5 @@
 from flask import Flask, request, make_response, jsonify
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy, BaseQuery
 from sqlalchemy import Table, Column, String, Integer, ForeignKey, DateTime, orm
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
@@ -35,7 +35,6 @@ def create_connection(db_file):
         conn = sqlite3.connect(db_file)
     except Exception as e:
         print(e)
-
     return conn
 
 
@@ -90,15 +89,15 @@ class User(db.Model):
             else:
                 privileges.append(row[1])
 
-    #
+    # Method init
     def __init__(self, **kwargs):
+        # surcharge with super()
         super(User, self).__init__(**kwargs)
         self.list_privileges = self.get_privilege_user()
 
     @orm.reconstructor
     def initOnLoad(self):
         self.list_privileges = self.get_privilege_user()
-
 
 
 class Pearl(db.Model):
@@ -109,20 +108,33 @@ class Pearl(db.Model):
     date = Column(DateTime, default=datetime.utcnow)
 
 
+    # method init
+    # def __init__(self, **kwargs):
+    #     super(User, self)
+    #     self.privilege_user = self.get_privilege_user()
+    # Verify if the user has the privilege to create an pearl
+    # def haveGotThePrivilege():
+    #     privilege = User.get_privilege_user()
+
+
 class Comment(db.Model):
     __tablename__ = "Comments"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('Users.id'))
     pearl_id = Column(Integer, ForeignKey('PearlsAndJewels.id'))
     comment = Column(String(200), nullable=False)
+    type_parent = Column(String(200), nullable=False)
+
 
 
 class Smiley(db.Model):
     __tablename__ = "Smileys"
-    id = Column(Integer, primary_key=True)
-    alt_name = Column(String(25), nullable=False)
-    img_link = Column(String, nullable=False)
+    id = Column(String)
+    smiley = Column(String(1), nullable=False)
+    pearl_id = Column(Integer, ForeignKey('PearlsAndJewels.id'))
 
+
+   # faire la table d'association des smileys et des users
 
 class Associations(db.Model):
     __tablename__ = "Associations"
@@ -151,7 +163,6 @@ class AssoUser(db.Model):
     granted_id = Column(String, ForeignKey(Grant.id), primary_key=True)
 
 
-
 def get_user_from_token(token, secret_key):
     try:
         username = jwt.decode(token, secret_key)
@@ -173,7 +184,7 @@ def check_login(*args, **kwargs):
 
 
 """
-wrapper used to protect route that need the user to be logged in
+Wrapper used to protect route that need the user to be logged in
 """
 def login_required(f):
     @wraps(f)
@@ -187,6 +198,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return check_login
 
+
 @app.route("/register", methods=["POST"])
 def register():
     logs = request.get_json()
@@ -198,6 +210,7 @@ def register():
         return jsonify({'message': 'Votre compte a ete cree'}), 200
     except:
         return jsonify({"error": "une erreur est intervenue"}), 500
+
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -246,7 +259,6 @@ db.create_all()
 *** Load statics roles configuration if needed
 """
 
-
 def insert_without_integrity_check(text_insert):
     conn = create_connection(database_name)
     cur = conn.cursor()
@@ -258,7 +270,6 @@ def insert_without_integrity_check(text_insert):
 
 
 def load_static_grants():
-
 
 # Insert of role and privileges in Grants table
     insert_without_integrity_check("insert into GRANTS values (1,'Role','Basic user','')")
@@ -334,8 +345,8 @@ load_static_grants()
 """
 *** Create admin user if not exist
 """
-retunAdminQuery = db.session.query(User).filter_by(username='Admin').count()
-if retunAdminQuery == 0:
+returnAdminQuery = db.session.query(User).filter_by(username='Admin').count()
+if returnAdminQuery == 0:
     user_admin = User(username='Admin', password=generate_password_hash('chbtfybj5nj'))
     db.session.add(user_admin)
     roleAdmin = db.session.query(Grant).filter_by(name_grant='Administrator').first()
@@ -347,3 +358,64 @@ if retunAdminQuery == 0:
 toto = db.session.query(User).filter_by(username='Admin').first()
 pprint(toto.list_privileges)
 
+
+"""
+*** Create route for pearls
+"""
+
+@app.route("/create_pearl", methods=["POST"])
+@login_required
+def create_pearl(content, date):
+    logs = request.get_json()
+    try:
+        id = db.session.query(User).filter_by(username=logs["userName"]).first().id
+        db.session.add(Pearl(user_id=id, content=logs['content'], date=(logs['date'])))
+        db.session.commit()
+        return jsonify({'message': 'Votre perle a été créée'}), 200
+    except Exception as e:
+        return jsonify({"error": "Une erreur est intervenue dans la création de votre perle"}), 500
+
+
+@app.route("/get_pearl", methods=["POST"])
+def get_pearls():
+    logs = request.get_json()
+    # The pageable and The gap
+    try:
+        pearls = db.session.query(Pearl).order_by(datetime=logs['date']).paginate(page=logs['page'], per_page=100, 
+                                                                                  error_out=True, max_per_page=100)
+        json_pearl = []
+        for pearl in pearls:
+            # Remplir le tableau avec
+            json_pearl.append(pearl.toJson())
+        return jsonify(json_pearl), 200
+    except Exception as e:
+        return jsonify({"error": "Une erreur est intervenue"}), 500
+
+
+@app.route("/create_comment", methods=["POST"])
+@login_required
+def create_comment():
+    logs = request.get_json()
+    try:
+        id = db.session.query(User).filter_by(username=logs["userName"]).first().id
+        db.session.add(Comment(user_id=id, pearl_id=logs["pearlId"], comment=logs["comment"], type_parent=logs[
+            "typeParent"]))
+        db.session.commit()
+        return jsonify({'message': 'Votre commentaire a été crée.'}), 200
+    except Exception as e:
+        return jsonify({"error": "Une erreur est intervenue dans la création de votre commentaire"}), 500
+
+
+@app.route("/get_comment", methods=["POST"])
+def get_comment():
+    logs = request.get_json()
+    try:
+        comments = db.session.query(Comment).filter_by(pearl_id=logs['pearlId'], type_parent=logs[
+            'typeParent']).order_by(datetime=logs['date']).paginate(page=logs['page'], per_page=100, error_out=True,
+                                                                    max_per_page=100)
+        json_comment = []
+        for comment in comments:
+            json_comment.append(comment.toJson())
+        return jsonify(json_comment), 200
+    except Exception as e:
+        return jsonify({"error": "Une erreur est internevue"}), 500
