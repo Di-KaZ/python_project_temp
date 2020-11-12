@@ -7,10 +7,11 @@ const Button = styled.button`
   padding: 15px;
   border: none;
   border-radius: 0;
-  width: 200px;
   height: fit-content;
   align-self: center;
   text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
   &:focus {
     outline: none;
   }
