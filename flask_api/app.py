@@ -1,13 +1,12 @@
-from sqlite3.dbapi2 import Date
 from flask import Flask, request, make_response, jsonify
-from flask_sqlalchemy import SQLAlchemy, BaseQuery
-from sqlalchemy import Table, Column, String, Integer, ForeignKey, DateTime, orm
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, orm
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import jwt
 from functools import wraps
 import sqlite3
-from pprint import pprint
+
 
 # Database name
 database_name = "model.db"
@@ -132,16 +131,17 @@ class Comment(db.Model):
     __tablename__ = "Comments"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('Users.id'))
-    pearl_id = Column(Integer, ForeignKey('PearlsAndJewels.id'))
+    pearl_id = Column(Integer, ForeignKey('PearlsAndJewels.id'), nullable=True)
+    comment_id = Column(Integer, ForeignKey('Comments.id'), nullable=True)
     comment = Column(String(200), nullable=False)
-    type_parent = Column(String(200), nullable=False)
+    date = Column(String(200), nullable=False)
     def toJson(self):
         return {
             "id" : self.id,
             "user_id" : self.user_id,
             "pearl_id" : self.pearl_id,
+            "comment_id" : self.comment_id,
             "comment" : self.comment,
-            "type_parent" : self.type_parent
         }
 
 
@@ -295,35 +295,47 @@ def get_pearls():
         return jsonify(json_pearl), 200
     except Exception as e:
         print(e)
-        return jsonify({"error": "Une erreur est intervenue"}), 500
+        return jsonify(json_pearl), 500
 
 
 @app.route("/create_comment", methods=["POST"])
 @login_required
 def create_comment():
     logs = request.get_json()
+    print(logs)
     try:
         id = get_user_from_token(logs['token'], app.config['SECRET_KEY']).id
-        db.session.add(Comment(user_id=id, pearl_id=logs["pearlId"], comment=logs["comment"], type_parent=logs[
-            "typeParent"]))
+        if 'pearlId' in logs.keys():
+            db.session.add(Comment(user_id=id, pearl_id=logs["pearlId"], comment_id=None, comment=logs["comment"], date=datetime.utcnow()))
+        else:
+            db.session.add(Comment(user_id=id, pearl_id=None, comment_id=logs["commentId"], comment=logs["comment"], date=datetime.utcnow()))
         db.session.commit()
         return jsonify({'message': 'Votre commentaire a été crée.'}), 200
     except Exception as e:
+        print(e)
         return jsonify({"error": "Une erreur est intervenue dans la création de votre commentaire"}), 500
 
 
 @app.route("/get_comment", methods=["POST"])
 def get_comment():
     logs = request.get_json()
+    print(logs)
     try:
-        comments = db.session.query(Comment).filter_by(pearl_id=logs['pearlId'], type_parent=logs[
-            'typeParent']).order_by(datetime=logs['date']).paginate(page=logs['page'], per_page=100, error_out=True,
-                                                                    max_per_page=100)
+        if 'pearlId' in logs.keys():
+            comments = db.session.query(Comment).filter_by(pearl_id=logs['pearlId']
+                                                ).order_by(Comment.date.desc()
+                                                ).paginate(page=logs['page'], per_page=100)
+        else:
+            comments = db.session.query(Comment).filter_by(comment_id=logs['commentId']
+                                                ).order_by(Comment.date.desc()
+                                                ).paginate(page=logs['page'], per_page=100)
         json_comment = []
-        for comment in comments:
+        print(comments.items)
+        for comment in comments.items:
             json_comment.append(comment.toJson())
         return jsonify(json_comment), 200
     except Exception as e:
+        print(e)
         return jsonify({"error": "Une erreur est internevue"}), 500
 
 """

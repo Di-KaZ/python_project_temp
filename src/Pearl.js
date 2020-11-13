@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import logo from "./img/logo_solo.png";
+import useLogin from "./useLogin";
 
 const Card = styled.div`
   margin-top: 50px;
@@ -107,23 +107,49 @@ const MessageInput = styled.textarea`
   resize: none;
 `;
 
-const Message = (props) => {
-  return (
-    <MessageInput maxLength={300} placeholder={"Dis nous tout"} {...props} />
-  );
-};
-
-const Response = ({ parent_id, type, setOpen }) => {
-  const [message, setMessage] = useState("");
-
+const Message = ({ message, setMessage }) => {
   const writer = (e) => {
     e.preventDefault();
     setMessage(e.target.value);
   };
 
+  return (
+    <MessageInput
+      onChange={(e) => {
+        writer(e);
+      }}
+      value={message}
+      maxLength={300}
+      placeholder={"Dis nous tout"}
+    />
+  );
+};
+
+const Response = ({ parent_id, type }) => {
+  const [message, setMessage] = useState("");
+  const [token] = useLogin();
+
   const send_comment = () => {
-    // TODO send comment
-    setOpen(false);
+    fetch("/create_comment", {
+      method: "post",
+      credentials: "include",
+      cache: "no-cache",
+      body:
+        type == "comment"
+          ? JSON.stringify({
+              token: token,
+              comment: message,
+              commentId: parent_id,
+            })
+          : JSON.stringify({
+              token: token,
+              comment: message,
+              pearlId: parent_id,
+            }),
+      headers: { "Content-Type": "application/json" },
+    }).then((response) => {
+      response.json().then();
+    });
   };
 
   return (
@@ -139,13 +165,11 @@ const Response = ({ parent_id, type, setOpen }) => {
     >
       <div style={{ display: "flex", flexDirection: "column" }}>
         <Message
+          message={message}
+          setMessage={setMessage}
           key="message"
           name="message"
           type="text"
-          onChange={(e) => {
-            writer(e);
-          }}
-          value={message}
         ></Message>
         <CommentButton
           onClick={send_comment}
@@ -167,6 +191,7 @@ const Response = ({ parent_id, type, setOpen }) => {
 const Comment = ({ id, user, message }) => {
   const [open, setOpen] = useState(false);
   const [openResponse, setOpenResponse] = useState(false);
+  const [comments, setComments] = useState([]);
 
   const Container = styled.div`
     margin-top: 20px;
@@ -177,6 +202,17 @@ const Comment = ({ id, user, message }) => {
 
   const fetch_comments = () => {
     // TODO fetch comment from flask
+    fetch("/get_comment", {
+      method: "post",
+      cache: "no-cache",
+      body: JSON.stringify({ page: 1, commentId: id }),
+      headers: { "Content-Type": "application/json" },
+    }).then((response) => {
+      response.json().then((json) => {
+        setComments(json);
+        console.log(json);
+      });
+    });
     setOpen(!open);
   };
 
@@ -205,9 +241,15 @@ const Comment = ({ id, user, message }) => {
         <Response parent_id={id} type={"comment"} setOpen={setOpenResponse} />
       )}
       {
-        /* TODO remove this and use requests */ open && (
-          <Comment id={id} user={user} message={message} />
-        )
+        /* TODO remove this and use requests */ open &&
+          comments.map((comment, i) => (
+            <Comment
+              key={comment.id}
+              id={comment.id}
+              user={comment.user_id}
+              message={comment.comment}
+            ></Comment>
+          ))
       }
     </Container>
   );
@@ -216,9 +258,20 @@ const Comment = ({ id, user, message }) => {
 const Pearl = ({ data }) => {
   const [open, setOpen] = useState(false);
   const [openResponse, setOpenResponse] = useState(false);
-
+  const [comments, setComments] = useState([]);
+  // TODO fetch comment from flask
   const fetch_comments = () => {
-    // TODO fetch comment from flask
+    fetch("/get_comment", {
+      method: "post",
+      cache: "no-cache",
+      body: JSON.stringify({ page: 1, pearlId: data.pearl_id }),
+      headers: { "Content-Type": "application/json" },
+    }).then((response) => {
+      response.json().then((json) => {
+        setComments(json);
+        console.log(json);
+      });
+    });
     setOpen(!open);
   };
 
@@ -241,7 +294,7 @@ const Pearl = ({ data }) => {
       </Top>
       {openResponse && (
         <Response
-          parent_id={data.id}
+          parent_id={data.pearl_id}
           type={"pearl"}
           setOpen={setOpenResponse}
         />
@@ -257,12 +310,12 @@ const Pearl = ({ data }) => {
         )}
       </div>
       {open &&
-        data?.comments?.map((comment, i) => (
+        comments.map((comment, i) => (
           <Comment
-            key={i}
+            key={comment.id}
             id={comment.id}
-            user={comment.user}
-            message={comment.message}
+            user={comment.user_id}
+            message={comment.comment}
           ></Comment>
         ))}
     </Card>

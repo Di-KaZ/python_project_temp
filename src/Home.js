@@ -24,7 +24,6 @@ const CenterContainer = styled.div`
 
 function Home() {
   const [pearls, setPearls] = useState([]);
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch("/get_pearl", {
@@ -38,40 +37,38 @@ function Home() {
         console.log(json);
       });
     });
-    setLoaded(true);
   }, []);
 
   return (
     <>
       <NewPearl />
       <CenterContainer>
-        {loaded &&
-          pearls.map((pearl) => (
-            //:face_vomiting:  :lying_face:  :rolling_eyes:  :cowboy:
-            <Pearl
-              key={pearl.id}
-              data={{
-                pearl_id: pearl.id,
-                user: pearl.username,
-                message: pearl.content,
-                smileys: [
-                  { icon: "🤮", num: 13 },
-                  { icon: "🤥", num: 200 },
-                  { icon: "🙄", num: 69 },
-                  { icon: "🤠", num: 78 },
-                ],
-                comments: [
-                  { comment_id: 1, user: "Celestine", message: "hahaha !" },
-                  {
-                    comment_id: 2,
-                    user: "Roblox",
-                    message: "that sounds fake",
-                  },
-                  { comment_id: 3, user: "Helene", message: "dam..." },
-                ],
-              }}
-            />
-          ))}
+        {pearls.map((pearl) => (
+          //:face_vomiting:  :lying_face:  :rolling_eyes:  :cowboy:
+          <Pearl
+            key={pearl.id}
+            data={{
+              pearl_id: pearl.id,
+              user: pearl.username,
+              message: pearl.content,
+              smileys: [
+                { icon: "🤮", num: 13 },
+                { icon: "🤥", num: 200 },
+                { icon: "🙄", num: 69 },
+                { icon: "🤠", num: 78 },
+              ],
+              comments: [
+                { comment_id: 1, user: "Celestine", message: "hahaha !" },
+                {
+                  comment_id: 2,
+                  user: "Roblox",
+                  message: "that sounds fake",
+                },
+                { comment_id: 3, user: "Helene", message: "dam..." },
+              ],
+            }}
+          />
+        ))}
       </CenterContainer>
     </>
   );
