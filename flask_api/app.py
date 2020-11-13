@@ -89,15 +89,15 @@ class User(db.Model):
             else:
                 privileges.append(row[1])
 
-    # Method init
-    def __init__(self, **kwargs):
-        # surcharge with super()
-        super(User, self).__init__(**kwargs)
-        self.list_privileges = self.get_privilege_user()
-
-    @orm.reconstructor
-    def initOnLoad(self):
-        self.list_privileges = self.get_privilege_user()
+    # # Method init
+    # def __init__(self, **kwargs):
+    #     # surcharge with super()
+    #     super(User, self).__init__(**kwargs)
+    #     self.list_privileges = self.get_privilege_user()
+    #
+    # @orm.reconstructor
+    # def initOnLoad(self):
+    #     self.list_privileges = self.get_privilege_user()
 
 
 class Pearl(db.Model):
@@ -126,15 +126,18 @@ class Comment(db.Model):
     type_parent = Column(String(200), nullable=False)
 
 
-
 class Smiley(db.Model):
     __tablename__ = "Smileys"
-    id = Column(String)
+    id = Column(String, primary_key=True)
     smiley = Column(String(1), nullable=False)
     pearl_id = Column(Integer, ForeignKey('PearlsAndJewels.id'))
 
 
-   # faire la table d'association des smileys et des users
+class AssoSmiley(db.Model):
+    __tablename__ = "Association_Smiley"
+    user_id = Column(Integer, ForeignKey('Users.id'), primary_key=True)
+    smiley_id = Column(Integer, ForeignKey('Smileys.id'), primary_key=True)
+
 
 class Associations(db.Model):
     __tablename__ = "Associations"
@@ -179,7 +182,7 @@ def check_login(*args, **kwargs):
         try:
             jwt.decode(logs['token'], app.config['SECRET_KEY'])
         except:
-            return jsonify({"error": "token is invalid"}), 401
+            return jsonify({"error": "token is invalid"}), 401   # is NOT valide
     return jsonify({"message": "token is valid"}), 200
 
 
@@ -194,7 +197,7 @@ def login_required(f):
             try:
                 jwt.decode(logs['token'], app.config['SECRET_KEY'])
             except:
-                return jsonify({"error": "token is invalid"}), 401
+                return jsonify({"error": "token is invalid"}), 401 # is NOT valide
         return f(*args, **kwargs)
     return check_login
 
@@ -208,13 +211,14 @@ def register():
         db.session.add(User(username=logs['userName'], password=generate_password_hash(logs['password'])))
         db.session.commit()
         return jsonify({'message': 'Votre compte a ete cree'}), 200
-    except:
+    except Exception as e:
         return jsonify({"error": "une erreur est intervenue"}), 500
 
 
 @app.route("/login", methods=["POST"])
 def login():
     logs = request.get_json()
+    
     user = db.session.query(User).filter(User.username == logs['userName']).first()
     if user and check_password_hash(user.password, logs['password']):
         token = jwt.encode({'user': logs['userName'], 'exp': datetime.utcnow() + timedelta(minutes=30)}, app.config['SECRET_KEY'])
@@ -270,7 +274,6 @@ def insert_without_integrity_check(text_insert):
 
 
 def load_static_grants():
-
 # Insert of role and privileges in Grants table
     insert_without_integrity_check("insert into GRANTS values (1,'Role','Basic user','')")
     insert_without_integrity_check("insert into GRANTS values (2,'Role','Moderator','')")
@@ -360,16 +363,16 @@ pprint(toto.list_privileges)
 
 
 """
-*** Create route for pearls
+*** Create route for pearls et comments
 """
 
 @app.route("/create_pearl", methods=["POST"])
 @login_required
-def create_pearl(content, date):
+def create_pearl():
     logs = request.get_json()
     try:
         id = db.session.query(User).filter_by(username=logs["userName"]).first().id
-        db.session.add(Pearl(user_id=id, content=logs['content'], date=(logs['date'])))
+        db.session.add(Pearl(user_id=id, content=logs['content']))
         db.session.commit()
         return jsonify({'message': 'Votre perle a été créée'}), 200
     except Exception as e:
@@ -381,8 +384,7 @@ def get_pearls():
     logs = request.get_json()
     # The pageable and The gap
     try:
-        pearls = db.session.query(Pearl).order_by(datetime=logs['date']).paginate(page=logs['page'], per_page=100, 
-                                                                                  error_out=True, max_per_page=100)
+        pearls = db.session.query(Pearl).order_by(datetime=logs['date']).paginate(page=logs['page'], per_page=100, error_out=True, max_per_page=100)
         json_pearl = []
         for pearl in pearls:
             # Remplir le tableau avec
@@ -398,8 +400,7 @@ def create_comment():
     logs = request.get_json()
     try:
         id = db.session.query(User).filter_by(username=logs["userName"]).first().id
-        db.session.add(Comment(user_id=id, pearl_id=logs["pearlId"], comment=logs["comment"], type_parent=logs[
-            "typeParent"]))
+        db.session.add(Comment(user_id=id, pearl_id=logs["pearlId"], comment=logs["comment"], type_parent=logs["typeParent"]))
         db.session.commit()
         return jsonify({'message': 'Votre commentaire a été crée.'}), 200
     except Exception as e:
@@ -411,11 +412,23 @@ def get_comment():
     logs = request.get_json()
     try:
         comments = db.session.query(Comment).filter_by(pearl_id=logs['pearlId'], type_parent=logs[
-            'typeParent']).order_by(datetime=logs['date']).paginate(page=logs['page'], per_page=100, error_out=True,
-                                                                    max_per_page=100)
+            'typeParent']).order_by(datetime=logs['date']).paginate(page=logs['page'], per_page=100, error_out=True, max_per_page=100)
         json_comment = []
         for comment in comments:
             json_comment.append(comment.toJson())
         return jsonify(json_comment), 200
     except Exception as e:
         return jsonify({"error": "Une erreur est internevue"}), 500
+     
+
+# la pearl où rajouter le smiley
+@login_required
+def add_remove_smiley():
+    # pearl_id -> int, wich smiley-> string, who -> string
+    logs = request.get_json()
+    id_pearl = db.session.query(Associations).filter_by(pearl_id=logs["pearlId"]).id
+    smiley = db.session.query(Associations).filter_by(smiley_id=logs["smileyId"])
+    user = db.session.query(Associations).filter_by(user=logs["userPearl"])
+
+    return 'ok' or 'ko'
+
