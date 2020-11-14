@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import useLogin from "./useLogin";
+import { Button } from "./StyledElem";
 
 const Card = styled.div`
   margin-top: 50px;
@@ -193,6 +194,7 @@ const Comment = ({ id, user, message }) => {
   const [open, setOpen] = useState(false);
   const [openResponse, setOpenResponse] = useState(false);
   const [comments, setComments] = useState([]);
+  const [page, setPage] = useState(1);
 
   const Container = styled.div`
     margin-top: 20px;
@@ -246,15 +248,19 @@ const Comment = ({ id, user, message }) => {
           fetch_comments={fetch_comments}
         />
       )}
-      {open &&
-        comments.map((comment) => (
-          <Comment
-            key={comment.id}
-            id={comment.id}
-            user={comment.username}
-            message={comment.comment}
-          ></Comment>
-        ))}
+      {open && comments.length !== 0 && (
+        <>
+          {comments.map((comment) => (
+            <Comment
+              key={comment.id}
+              id={comment.id}
+              user={comment.username}
+              message={comment.comment}
+            ></Comment>
+          ))}
+          <Button onClick={() => setPage(page + 1)}> Charge m'en plus !</Button>
+        </>
+      )}
     </Container>
   );
 };
@@ -263,6 +269,8 @@ const Pearl = ({ data }) => {
   const [open, setOpen] = useState(false);
   const [openResponse, setOpenResponse] = useState(false);
   const [comments, setComments] = useState([]);
+  const [page, setPage] = useState(1);
+
   // TODO fetch comment from flask
   const fetch_comments = () => {
     fetch("/get_comment", {
@@ -314,15 +322,19 @@ const Pearl = ({ data }) => {
           </CommentButton>
         )}
       </div>
-      {open &&
-        comments.map((comment, i) => (
-          <Comment
-            key={comment.id}
-            id={comment.id}
-            user={comment.username}
-            message={comment.comment}
-          ></Comment>
-        ))}
+      {open && comments.length !== 0 && (
+        <>
+          {comments.map((comment) => (
+            <Comment
+              key={comment.id}
+              id={comment.id}
+              user={comment.username}
+              message={comment.comment}
+            ></Comment>
+          ))}
+          <Button onClick={() => setPage(page + 1)}> Charge m'en plus !</Button>
+        </>
+      )}
     </Card>
   );
 };

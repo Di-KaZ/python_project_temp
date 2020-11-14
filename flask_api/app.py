@@ -317,18 +317,19 @@ def create_comment():
 def get_comment():
     logs = request.get_json()
     try:
-        if 'pearlId' in logs.keys():
-            comments = db.session.query(Comment).filter_by(pearl_id=logs['pearlId']
-                                                ).order_by(Comment.date.desc()
-                                                ).paginate(page=logs['page'], per_page=100)
-        else:
-            comments = db.session.query(Comment).filter_by(comment_id=logs['commentId']
-                                                ).order_by(Comment.date.desc()
-                                                ).paginate(page=logs['page'], per_page=100)
         json_comment = []
-        for comment in comments.items:
-            json_comment.append(comment.toJson())
-        return jsonify(json_comment), 200
+        for i in range(1, logs['page'] + 1):
+            if 'pearlId' in logs.keys():
+                comments = db.session.query(Comment).filter_by(pearl_id=logs['pearlId']
+                                                    ).order_by(Comment.date.desc()
+                                                    ).paginate(page=i, per_page=100)
+            else:
+                comments = db.session.query(Comment).filter_by(comment_id=logs['commentId']
+                                                    ).order_by(Comment.date.desc()
+                                                    ).paginate(page=i, per_page=100)
+            for comment in comments.items:
+                json_comment.append(comment.toJson())
+            return jsonify(json_comment), 200
     except Exception as e:
         return jsonify({"error": "Une erreur est internevue"}), 500
 
