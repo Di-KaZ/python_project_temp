@@ -125,7 +125,7 @@ const Message = ({ message, setMessage }) => {
   );
 };
 
-const Response = ({ parent_id, type }) => {
+const Response = ({ parent_id, type, setOpen, fetch_comments }) => {
   const [message, setMessage] = useState("");
   const [token] = useLogin();
 
@@ -148,7 +148,8 @@ const Response = ({ parent_id, type }) => {
             }),
       headers: { "Content-Type": "application/json" },
     }).then((response) => {
-      response.json().then();
+      setOpen(false);
+      fetch_comments();
     });
   };
 
@@ -238,19 +239,22 @@ const Comment = ({ id, user, message }) => {
         Un truc a dire ?
       </CommentButton>
       {openResponse && (
-        <Response parent_id={id} type={"comment"} setOpen={setOpenResponse} />
+        <Response
+          parent_id={id}
+          type={"comment"}
+          setOpen={setOpenResponse}
+          fetch_comments={fetch_comments}
+        />
       )}
-      {
-        /* TODO remove this and use requests */ open &&
-          comments.map((comment, i) => (
-            <Comment
-              key={comment.id}
-              id={comment.id}
-              user={comment.user_id}
-              message={comment.comment}
-            ></Comment>
-          ))
-      }
+      {open &&
+        comments.map((comment) => (
+          <Comment
+            key={comment.id}
+            id={comment.id}
+            user={comment.username}
+            message={comment.comment}
+          ></Comment>
+        ))}
     </Container>
   );
 };
@@ -297,6 +301,7 @@ const Pearl = ({ data }) => {
           parent_id={data.pearl_id}
           type={"pearl"}
           setOpen={setOpenResponse}
+          fetch_comments={fetch_comments}
         />
       )}
       <div style={{ display: "flex" }}>
@@ -314,7 +319,7 @@ const Pearl = ({ data }) => {
           <Comment
             key={comment.id}
             id={comment.id}
-            user={comment.user_id}
+            user={comment.username}
             message={comment.comment}
           ></Comment>
         ))}

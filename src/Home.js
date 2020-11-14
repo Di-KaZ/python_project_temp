@@ -2,17 +2,17 @@ import React, { useEffect, useState } from "react";
 import Pearl from "./Pearl";
 import styled from "styled-components";
 import NewPearl from "./NewPearl";
-import { set } from "js-cookie";
+import { Button } from "./StyledElem";
 
 const CenterContainer = styled.div`
   padding-top: 100px;
   width: 100vw;
-  height: 100vh;
+  height: 90vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: fixed;
-  overflow-x: scroll;
+  overflow-y: scroll;
   backdrop-filter: blur(10px);
   --webkit-backdrop-filter: blur(10px);
   ::-webkit-scrollbar {
@@ -24,27 +24,31 @@ const CenterContainer = styled.div`
 
 function Home() {
   const [pearls, setPearls] = useState([]);
+  const [onChange, setOnChange] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetch("/get_pearl", {
       method: "post",
       cache: "no-cache",
-      body: JSON.stringify({ page: 1 }),
+      body: JSON.stringify({ page: page }),
       headers: { "Content-Type": "application/json" },
     }).then((response) => {
       response.json().then((json) => {
         setPearls(json);
-        console.log(json);
       });
     });
-  }, []);
+  }, [onChange, page]);
 
   return (
     <>
-      <NewPearl />
+      <NewPearl
+        setOnChange={setOnChange}
+        onChange={onChange}
+        setPage={setPage}
+      />
       <CenterContainer>
         {pearls.map((pearl) => (
-          //:face_vomiting:  :lying_face:  :rolling_eyes:  :cowboy:
           <Pearl
             key={pearl.id}
             data={{
@@ -57,18 +61,10 @@ function Home() {
                 { icon: "🙄", num: 69 },
                 { icon: "🤠", num: 78 },
               ],
-              comments: [
-                { comment_id: 1, user: "Celestine", message: "hahaha !" },
-                {
-                  comment_id: 2,
-                  user: "Roblox",
-                  message: "that sounds fake",
-                },
-                { comment_id: 3, user: "Helene", message: "dam..." },
-              ],
             }}
           />
         ))}
+        <Button onClick={() => setPage(page + 1)}>Charge m'en plus !</Button>
       </CenterContainer>
     </>
   );

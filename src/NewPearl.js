@@ -5,6 +5,7 @@ import CreateIcon from "@material-ui/icons/Create";
 import CloseIcon from "@material-ui/icons/Close";
 import { Button } from "./StyledElem";
 import useLogin from "./useLogin";
+import { useHistory } from "react-router-dom";
 
 const MessageInput = styled.textarea`
   margin-top: 15px;
@@ -49,7 +50,8 @@ const Message = ({ open, message, setMessage }) => {
   );
 };
 
-const NewPearl = () => {
+const NewPearl = ({ setOnChange, onChange, setPage }) => {
+  const history = useHistory();
   const [open, setOpen] = useState(false);
   const [token] = useLogin();
   const [message, setMessage] = useState("");
@@ -65,7 +67,9 @@ const NewPearl = () => {
       }),
       headers: { "Content-Type": "application/json" },
     }).then((response) => {
-      response.json().then();
+      setOnChange(!onChange);
+      setOpen(!open);
+      setPage(1);
     });
   };
 

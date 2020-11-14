@@ -24,18 +24,17 @@ db = SQLAlchemy(app)
 *** CONNECTION to the Database file
 """
 
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by the db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-    except Exception as e:
-        print(e)
-    return conn
+# def create_connection(db_file):
+#     """ create a database connection to the SQLite database
+#         specified by the db_file
+#     :param db_file: database file
+#     :return: Connection object or None
+#     """
+#     conn = None
+#     try:
+#         conn = sqlite3.connect(db_file)
+#     except Exception as e:
+#     return conn
 
 
 """
@@ -44,7 +43,7 @@ def create_connection(db_file):
 
 
 # Connection to the database
-conn = create_connection(database_name)
+# conn = create_connection(database_name)
 
 class User(db.Model):
     __tablename__ = "Users"
@@ -136,9 +135,10 @@ class Comment(db.Model):
     comment = Column(String(200), nullable=False)
     date = Column(String(200), nullable=False)
     def toJson(self):
+        username = db.session.query(User).filter_by(id=self.user_id).first().username
         return {
             "id" : self.id,
-            "user_id" : self.user_id,
+            "username" : username,
             "pearl_id" : self.pearl_id,
             "comment_id" : self.comment_id,
             "comment" : self.comment,
@@ -278,7 +278,6 @@ def create_pearl():
         db.session.commit()
         return jsonify({'message': 'Votre perle a été créée'}), 200
     except Exception as e:
-        print(e)
         return jsonify({"error": "Une erreur est intervenue dans la création de votre perle"}), 500
 
 
@@ -287,22 +286,21 @@ def get_pearls():
     logs = request.get_json()
     # The pageable and The gap
     try:
-        pearls = db.session.query(Pearl).order_by(Pearl.date.desc()).paginate(page=logs['page'], per_page=100)
         json_pearl = []
-        for pearl in pearls.items:
-            # Remplir le tableau avec
-            json_pearl.append(pearl.toJson())
+        for i in range(1, logs['page'] + 1):
+            pearls = db.session.query(Pearl).order_by(Pearl.date.desc()).paginate(page=i, per_page=100, error_out=False)
+            for pearl in pearls.items:
+                # Remplir le tableau avec
+                json_pearl.append(pearl.toJson())
         return jsonify(json_pearl), 200
     except Exception as e:
-        print(e)
-        return jsonify(json_pearl), 500
+        return jsonify([]), 500
 
 
 @app.route("/create_comment", methods=["POST"])
 @login_required
 def create_comment():
     logs = request.get_json()
-    print(logs)
     try:
         id = get_user_from_token(logs['token'], app.config['SECRET_KEY']).id
         if 'pearlId' in logs.keys():
@@ -312,14 +310,12 @@ def create_comment():
         db.session.commit()
         return jsonify({'message': 'Votre commentaire a été crée.'}), 200
     except Exception as e:
-        print(e)
         return jsonify({"error": "Une erreur est intervenue dans la création de votre commentaire"}), 500
 
 
 @app.route("/get_comment", methods=["POST"])
 def get_comment():
     logs = request.get_json()
-    print(logs)
     try:
         if 'pearlId' in logs.keys():
             comments = db.session.query(Comment).filter_by(pearl_id=logs['pearlId']
@@ -330,12 +326,10 @@ def get_comment():
                                                 ).order_by(Comment.date.desc()
                                                 ).paginate(page=logs['page'], per_page=100)
         json_comment = []
-        print(comments.items)
         for comment in comments.items:
             json_comment.append(comment.toJson())
         return jsonify(json_comment), 200
     except Exception as e:
-        print(e)
         return jsonify({"error": "Une erreur est internevue"}), 500
 
 """
