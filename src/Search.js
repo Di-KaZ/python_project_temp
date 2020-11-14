@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Pearl from "./Pearl";
 import styled from "styled-components";
 import { white } from "material-ui/styles/colors";
@@ -63,9 +63,20 @@ const SearchI = styled.div`
   justify-content: center;
 `;
 
-const SearchBar = () => {
+const SearchBar = ({ setPearls }) => {
   const [query, setQuery] = useState("");
   const fetchPearls = (e) => {
+    fetch("/search", {
+      method: "post",
+      cache: "no-cache",
+      body: JSON.stringify({ search: e.target.value }),
+      headers: { "Content-Type": "application/json" },
+    }).then((response) => {
+      response.json().then((json) => {
+        setPearls(json);
+        console.log(json);
+      });
+    });
     setQuery(e.target.value);
     // fetch
   };
@@ -95,34 +106,26 @@ const SearchBar = () => {
 };
 
 function Search() {
+  const [pearls, setPearls] = useState([]);
   return (
     <CenterContainer>
-      <SearchBar />
-      {/* {Array(20)
-        .fill()
-        .map((_, i) => (
-          //:face_vomiting:  :lying_face:  :rolling_eyes:  :cowboy:
-          <Pearl
-            key={i}
-            data={{
-              pearl_id: i,
-              user: "qwerty",
-              message:
-                "of the moment, so blinded by desire, that they cannot foresee the pain and trouble that are bound to ensue; and equal blame belongs to those who fail in their duty through weakness of will, which is the same as saying through shrinking from toil and pain. These cases are perfectly simple and easy to distinguish. In a free hour",
-              smileys: [
-                { icon: "🤮", num: 13 },
-                { icon: "🤥", num: 200 },
-                { icon: "🙄", num: 69 },
-                { icon: "🤠", num: 78 },
-              ],
-              comments: [
-                { comment_id: 1, user: "Celestine", message: "hahaha !" },
-                { comment_id: 2, user: "Roblox", message: "that sounds fake" },
-                { comment_id: 3, user: "Helene", message: "dam..." },
-              ],
-            }}
-          />
-        ))} */}
+      <SearchBar setPearls={setPearls} />
+      {pearls.map((pearl) => (
+        <Pearl
+          key={pearl.id}
+          data={{
+            pearl_id: pearl.id,
+            user: pearl.username,
+            message: pearl.content,
+            smileys: [
+              { icon: "🤮", num: 13 },
+              { icon: "🤥", num: 200 },
+              { icon: "🙄", num: 69 },
+              { icon: "🤠", num: 78 },
+            ],
+          }}
+        />
+      ))}
     </CenterContainer>
   );
 }

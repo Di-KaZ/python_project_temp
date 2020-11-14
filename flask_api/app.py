@@ -1,4 +1,5 @@
 from flask import Flask, request, make_response, jsonify
+from flask import json
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, orm
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -332,6 +333,20 @@ def get_comment():
             return jsonify(json_comment), 200
     except Exception as e:
         return jsonify({"error": "Une erreur est internevue"}), 500
+
+
+@app.route("/search", methods=["POST"])
+def search():
+    data = request.get_json()
+    try:
+        json_pearls = []
+        pearls = db.session.query(Pearl).filter(Pearl.content.contains(data['search'])).order_by(Pearl.date.desc()).paginate(page=1, per_page=100, error_out=False)
+        for pearl in pearls.items:
+            json_pearls.append(pearl.toJson())
+        return jsonify(json_pearls), 200
+    except Exception as e:
+        print(e)
+        return jsonify([]), 500
 
 """
 *** Invironment config
