@@ -9,6 +9,7 @@ from functools import wraps
 import sqlite3
 
 
+
 # Database name
 database_name = "model.db"
 
@@ -58,7 +59,7 @@ class User(db.Model):
     # def role_user(self):
     #     role = "Basic User"  # By default, an user is a basic user
 
-    # # Method extract privileges for specific user
+    # Method extract privileges for specific user
     # def get_privilege_user(self):
     #     tab_privileges = []
     #     cur = self.conn.cursor()
@@ -95,7 +96,7 @@ class User(db.Model):
     #     # surcharge with super()
     #     super(User, self).__init__(**kwargs)
     #     self.list_privileges = self.get_privilege_user()
-
+    #
     # @orm.reconstructor
     # def initOnLoad(self):
     #     self.list_privileges = self.get_privilege_user()
@@ -117,6 +118,15 @@ class Pearl(db.Model):
             "username" : username
         }
 
+    def toJson(self):
+        username = db.session.query(User).filter_by(id=self.user_id).first().username
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "content": self.content,
+            "date": self.date,
+            "username": username
+        }
 
     # method init
     # def __init__(self, **kwargs):
@@ -146,16 +156,18 @@ class Comment(db.Model):
         }
 
 
+class Smiley(db.Model):
+    __tablename__ = "Smileys"
+    id = Column(String, primary_key=True)
+    smiley = Column(String(1), nullable=False)
+    pearl_id = Column(Integer, ForeignKey('PearlsAndJewels.id'))
 
 
-# class Smiley(db.Model):
-#     __tablename__ = "Smileys"
-#     id = Column(String(20), nullable=False, Prim)
-#     smiley = Column(String(1), nullable=False)
-#     pearl_id = Column(Integer, ForeignKey('PearlsAndJewels.id'))
+class AssoSmiley(db.Model):
+    __tablename__ = "Association_Smiley"
+    user_id = Column(Integer, ForeignKey('Users.id'), primary_key=True)
+    smiley_id = Column(Integer, ForeignKey('Smileys.id'), primary_key=True)
 
-
-# faire la table d'association des smileys et des users
 
 # class Associations(db.Model):
 #     __tablename__ = "Associations"
@@ -200,7 +212,7 @@ def check_login(*args, **kwargs):
         try:
             jwt.decode(logs['token'], app.config['SECRET_KEY'])
         except:
-            return jsonify({"error": "token is invalid"}), 401
+            return jsonify({"error": "token is invalid"}), 401   # is NOT valide
     return jsonify({"message": "token is valid"}), 200
 
 
@@ -215,7 +227,7 @@ def login_required(f):
             try:
                 jwt.decode(logs['token'], app.config['SECRET_KEY'])
             except:
-                return jsonify({"error": "token is invalid"}), 401
+                return jsonify({"error": "token is invalid"}), 401 # is NOT valide
         return f(*args, **kwargs)
     return check_login
 
@@ -229,13 +241,14 @@ def register():
         db.session.add(User(username=logs['userName'], password=generate_password_hash(logs['password'])))
         db.session.commit()
         return jsonify({'message': 'Votre compte a ete cree'}), 200
-    except:
+    except Exception as e:
         return jsonify({"error": "une erreur est intervenue"}), 500
 
 
 @app.route("/login", methods=["POST"])
 def login():
     logs = request.get_json()
+
     user = db.session.query(User).filter(User.username == logs['userName']).first()
     if user and check_password_hash(user.password, logs['password']):
         token = jwt.encode({'user': logs['userName'], 'exp': datetime.utcnow() + timedelta(minutes=30)}, app.config['SECRET_KEY'])
@@ -267,19 +280,6 @@ def delete_account():
             return jsonify({'message': 'account deleted !'}), 200
     except Exception as e:
         return jsonify({'error': 'unexpected error '}), 401
-
-
-@app.route("/create_pearl", methods=["POST"])
-@login_required
-def create_pearl():
-    logs = request.get_json()
-    try:
-        id = get_user_from_token(logs['token'], app.config['SECRET_KEY']).id
-        db.session.add(Pearl(user_id=id, content=logs['content']))
-        db.session.commit()
-        return jsonify({'message': 'Votre perle a été créée'}), 200
-    except Exception as e:
-        return jsonify({"error": "Une erreur est intervenue dans la création de votre perle"}), 500
 
 
 @app.route("/get_pearl", methods=["POST"])
@@ -332,6 +332,7 @@ def get_comment():
                 json_comment.append(comment.toJson())
             return jsonify(json_comment), 200
     except Exception as e:
+        print(e)
         return jsonify({"error": "Une erreur est internevue"}), 500
 
 
@@ -345,7 +346,6 @@ def search():
             json_pearls.append(pearl.toJson())
         return jsonify(json_pearls), 200
     except Exception as e:
-        print(e)
         return jsonify([]), 500
 
 """
@@ -369,79 +369,78 @@ def insert_without_integrity_check(text_insert):
         pass
 
 
-def load_static_grants():
-
-# Insert of role and privileges in Grants table
-    insert_without_integrity_check("insert into GRANTS values (1,'Role','Basic user','')")
-    insert_without_integrity_check("insert into GRANTS values (2,'Role','Moderator','')")
-    insert_without_integrity_check("insert into GRANTS values (3,'Role','Administrator','')")
-    insert_without_integrity_check("insert into GRANTS values (4,'Privilege','Create his Profile','')")
-    insert_without_integrity_check("insert into GRANTS values (5,'Privilege','Update his Profile','')")
-    insert_without_integrity_check("insert into GRANTS values (6,'Privilege','Delete his Profile','')")
-    insert_without_integrity_check("insert into GRANTS values (7,'Privilege','Create his Pearl','')")
-    insert_without_integrity_check("insert into GRANTS values (8,'Privilege','Update his Pearl','')")
-    insert_without_integrity_check("insert into GRANTS values (9,'Privilege','Delete his Pearl','')")
-    insert_without_integrity_check("insert into GRANTS values (10,'Privilege','Create his Comment','')")
-    insert_without_integrity_check("insert into GRANTS values (11,'Privilege','Update his Comment','')")
-    insert_without_integrity_check("insert into GRANTS values (12,'Privilege','Delete his Comment','')")
-    insert_without_integrity_check("insert into GRANTS values (13,'Privilege','Reaction with a Smiley','')")
-    insert_without_integrity_check("insert into GRANTS values (14,'Privilege','Update his Reaction','')")
-    insert_without_integrity_check("insert into GRANTS values (15,'Privilege','Delete his Reaction','')")
-    insert_without_integrity_check("insert into GRANTS values (16,'Privilege','Delete one Perle','')")
-    insert_without_integrity_check("insert into GRANTS values (17,'Privilege','Delete one Comment','')")
-    insert_without_integrity_check("insert into GRANTS values (18,'Privilege','Give a role','')")
-    insert_without_integrity_check("insert into GRANTS values (19,'Privilege','Delete a role','')")
-    insert_without_integrity_check("insert into GRANTS values (20,'Privilege','Delete one user','')")
-    insert_without_integrity_check("insert into GRANTS values (21,'Privilege','Ban User','')")
-    insert_without_integrity_check("insert into GRANTS values (22, 'Privilege','API Access','')")
-    insert_without_integrity_check("insert into GRANTS values (23, 'Privilege','View Pearls','')")
-    insert_without_integrity_check("insert into GRANTS values (24, 'Privilege','View his Pearl','')")
-    insert_without_integrity_check("insert into GRANTS values (25, 'Privilege','View his Profile','')")
-    insert_without_integrity_check("insert into GRANTS values (26, 'Privilege','View Profiles','')")
-    insert_without_integrity_check("insert into GRANTS values (27, 'Privilege','View Comments','')")
-    insert_without_integrity_check("insert into GRANTS values (28, 'Privilege','View his Comment','')")
-
-# Insert of role and privileges in Grants table
-# Table ASSO_GRANTS Load
-# Role links
-    insert_without_integrity_check("insert into Association_Grant values (2, 1)")
-    insert_without_integrity_check("insert into Association_Grant values (3, 2)")
-
-# Privilege links
-## Basic User
-    insert_without_integrity_check("insert into Association_Grant values (1, 4)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 5)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 6)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 7)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 8)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 9)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 10)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 11)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 12)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 13)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 14)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 15)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 23)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 24)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 25)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 26)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 27)")
-    insert_without_integrity_check("insert into Association_Grant values (1, 28)")
-
-## Moderator
-    insert_without_integrity_check("insert into Association_Grant values (2, 16)")
-    insert_without_integrity_check("insert into Association_Grant values (2, 17)")
-
-## Administator
-    insert_without_integrity_check("insert into Association_Grant values (3, 18)")
-    insert_without_integrity_check("insert into Association_Grant values (3, 19)")
-    insert_without_integrity_check("insert into Association_Grant values (3, 20)")
-    insert_without_integrity_check("insert into Association_Grant values (3, 21)")
-    insert_without_integrity_check("insert into Association_Grant values (3, 22)")
-
-
+# def load_static_grants():
+# # Insert of role and privileges in Grants table
+#     insert_without_integrity_check("insert into GRANTS values (1,'Role','Basic user','')")
+#     insert_without_integrity_check("insert into GRANTS values (2,'Role','Moderator','')")
+#     insert_without_integrity_check("insert into GRANTS values (3,'Role','Administrator','')")
+#     insert_without_integrity_check("insert into GRANTS values (4,'Privilege','Create his Profile','')")
+#     insert_without_integrity_check("insert into GRANTS values (5,'Privilege','Update his Profile','')")
+#     insert_without_integrity_check("insert into GRANTS values (6,'Privilege','Delete his Profile','')")
+#     insert_without_integrity_check("insert into GRANTS values (7,'Privilege','Create his Pearl','')")
+#     insert_without_integrity_check("insert into GRANTS values (8,'Privilege','Update his Pearl','')")
+#     insert_without_integrity_check("insert into GRANTS values (9,'Privilege','Delete his Pearl','')")
+#     insert_without_integrity_check("insert into GRANTS values (10,'Privilege','Create his Comment','')")
+#     insert_without_integrity_check("insert into GRANTS values (11,'Privilege','Update his Comment','')")
+#     insert_without_integrity_check("insert into GRANTS values (12,'Privilege','Delete his Comment','')")
+#     insert_without_integrity_check("insert into GRANTS values (13,'Privilege','Reaction with a Smiley','')")
+#     insert_without_integrity_check("insert into GRANTS values (14,'Privilege','Update his Reaction','')")
+#     insert_without_integrity_check("insert into GRANTS values (15,'Privilege','Delete his Reaction','')")
+#     insert_without_integrity_check("insert into GRANTS values (16,'Privilege','Delete one Perle','')")
+#     insert_without_integrity_check("insert into GRANTS values (17,'Privilege','Delete one Comment','')")
+#     insert_without_integrity_check("insert into GRANTS values (18,'Privilege','Give a role','')")
+#     insert_without_integrity_check("insert into GRANTS values (19,'Privilege','Delete a role','')")
+#     insert_without_integrity_check("insert into GRANTS values (20,'Privilege','Delete one user','')")
+#     insert_without_integrity_check("insert into GRANTS values (21,'Privilege','Ban User','')")
+#     insert_without_integrity_check("insert into GRANTS values (22, 'Privilege','API Access','')")
+#     insert_without_integrity_check("insert into GRANTS values (23, 'Privilege','View Pearls','')")
+#     insert_without_integrity_check("insert into GRANTS values (24, 'Privilege','View his Pearl','')")
+#     insert_without_integrity_check("insert into GRANTS values (25, 'Privilege','View his Profile','')")
+#     insert_without_integrity_check("insert into GRANTS values (26, 'Privilege','View Profiles','')")
+#     insert_without_integrity_check("insert into GRANTS values (27, 'Privilege','View Comments','')")
+#     insert_without_integrity_check("insert into GRANTS values (28, 'Privilege','View his Comment','')")
+#
+# # Insert of role and privileges in Grants table
+# # Table ASSO_GRANTS Load
+# # Role links
+#     insert_without_integrity_check("insert into Association_Grant values (2, 1)")
+#     insert_without_integrity_check("insert into Association_Grant values (3, 2)")
+#
+# # Privilege links
+# ## Basic User
+#     insert_without_integrity_check("insert into Association_Grant values (1, 4)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 5)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 6)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 7)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 8)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 9)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 10)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 11)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 12)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 13)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 14)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 15)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 23)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 24)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 25)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 26)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 27)")
+#     insert_without_integrity_check("insert into Association_Grant values (1, 28)")
+#
+# ## Moderator
+#     insert_without_integrity_check("insert into Association_Grant values (2, 16)")
+#     insert_without_integrity_check("insert into Association_Grant values (2, 17)")
+#
+# ## Administator
+#     insert_without_integrity_check("insert into Association_Grant values (3, 18)")
+#     insert_without_integrity_check("insert into Association_Grant values (3, 19)")
+#     insert_without_integrity_check("insert into Association_Grant values (3, 20)")
+#     insert_without_integrity_check("insert into Association_Grant values (3, 21)")
+#     insert_without_integrity_check("insert into Association_Grant values (3, 22)")
+#
+#
 # load_static_grants()
-
+#
 # """
 # *** Create admin user if not exist
 # """
@@ -453,8 +452,40 @@ def load_static_grants():
 #     asso_user = AssoUser(user_id=user_admin.id, granted_id=roleAdmin.id)
 #     db.session.add(asso_user)
 #     db.session.commit()
+#
+#
+# toto = db.session.query(User).filter_by(username='Admin').first()
+# pprint(toto.list_privileges)
 
+
+"""
+*** Create route for pearls et comments
+"""
+
+@app.route("/create_pearl", methods=["POST"])
+@login_required
+def create_pearl():
+    logs = request.get_json()
+    try:
+        id = get_user_from_token(logs['token'], app.config['SECRET_KEY']).id
+        db.session.add(Pearl(user_id=id, content=logs['content']))
+        db.session.commit()
+        return jsonify({'message': 'Votre perle a été créée'}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Une erreur est intervenue dans la création de votre perle"}), 500
 
 # toto = db.session.query(User).filter_by(username='Admin').first()
 # pprint(toto.list_privileges)
+
+# la pearl où rajouter le smiley
+# @login_required
+# def add_remove_smiley():
+#     # pearl_id -> int, wich smiley-> string, who -> string
+#     logs = request.get_json()
+#     id_pearl = db.session.query(Associations).filter_by(pearl_id=logs["pearlId"]).id
+#     smiley = db.session.query(Associations).filter_by(smiley_id=logs["smileyId"])
+#     user = db.session.query(Associations).filter_by(user=logs["userPearl"])
+#
+#     return 'ok' or 'ko'
 

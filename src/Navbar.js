@@ -53,7 +53,7 @@ const Navbar = () => {
           }}
           onClick={() => history.push("/")}
         >
-          Acceuil
+          Accueil
         </NavItem>
         <NavItem
           style={{
