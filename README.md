@@ -8,10 +8,10 @@ Be able to save all funny and WTF moment of our firends / colleagues in a small 
 
 ## Some screenshots
 
-![login](http://url/to/img.png)
-![home](http://url/to/img.png)
-![search](http://url/to/img.png)
-![account](http://url/to/img.png)
+![login](https://github.com/Di-KaZ/Pearls_and_Jewels/blob/moussa/screen.PNG)
+![home](https://github.com/Di-KaZ/Pearls_and_Jewels/blob/moussa/screen2.PNG)
+![search](https://github.com/Di-KaZ/Pearls_and_Jewels/blob/moussa/screen3.PNG)
+![account](https://github.com/Di-KaZ/Pearls_and_Jewels/blob/moussa/screen4.PNG)
 
 # HOW TO RUN
 
