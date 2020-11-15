@@ -3,7 +3,7 @@ import styled from "styled-components";
 import logo from "./img/logo.png";
 import { useHistory } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 
 const NavContainer = styled(motion.div)`
   background-color: #2d4059;

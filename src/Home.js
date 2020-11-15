@@ -55,6 +55,7 @@ function Home() {
               pearl_id: pearl.id,
               user: pearl.username,
               message: pearl.content,
+              date: pearl.date,
               smileys: [
                 { icon: "🤮", num: 13 },
                 { icon: "🤥", num: 200 },

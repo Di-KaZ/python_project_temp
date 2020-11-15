@@ -68,6 +68,7 @@ const Profile = () => {
   const logOut = () => {
     Cookies.remove("token");
     history.push("/");
+    window.location.reload(false);
   };
 
   const deleteAccount = () => {

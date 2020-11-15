@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import useLogin from "./useLogin";
 import { Button } from "./StyledElem";
@@ -21,14 +21,6 @@ const Top = styled.div`
   min-height: match-content;
   border-radius: 10px 10px 10px 10px;
   padding: 20px;
-`;
-
-const Logo = styled.img`
-  width: 150px;
-  height: 150px;
-  position: relative;
-  left: -50px;
-  top: -70px;
 `;
 
 const SmileyContainer = styled.div`
@@ -136,7 +128,7 @@ const Response = ({ parent_id, type, setOpen, fetch_comments }) => {
       credentials: "include",
       cache: "no-cache",
       body:
-        type == "comment"
+        type === "comment"
           ? JSON.stringify({
               token: token,
               comment: message,
@@ -190,18 +182,18 @@ const Response = ({ parent_id, type, setOpen, fetch_comments }) => {
   );
 };
 
+const Container = styled.div`
+  margin-top: 20px;
+  padding: 20px;
+  margin-left: 10px;
+  border-left: 3px solid #d41717;
+`;
+
 const Comment = ({ id, user, message }) => {
   const [open, setOpen] = useState(false);
   const [openResponse, setOpenResponse] = useState(false);
   const [comments, setComments] = useState([]);
   const [page, setPage] = useState(1);
-
-  const Container = styled.div`
-    margin-top: 20px;
-    padding: 20px;
-    margin-left: 10px;
-    border-left: 3px solid #d41717;
-  `;
 
   const fetch_comments = () => {
     // TODO fetch comment from flask
@@ -213,7 +205,6 @@ const Comment = ({ id, user, message }) => {
     }).then((response) => {
       response.json().then((json) => {
         setComments(json);
-        console.log(json);
       });
     });
     setOpen(!open);
@@ -281,7 +272,6 @@ const Pearl = ({ data }) => {
     }).then((response) => {
       response.json().then((json) => {
         setComments(json);
-        console.log(json);
       });
     });
     setOpen(!open);
@@ -289,9 +279,10 @@ const Pearl = ({ data }) => {
 
   return (
     <Card>
-      {/* <Logo src={logo} alt="logo" /> */}
       <Top>
-        <User>Proposé par : {data.user}</User>
+        <User>
+          Proposé par : {data.user} le : {data.date}
+        </User>
         {data.message}
         <SmileyContainer>
           {data?.smileys?.map((smiley, i) => (

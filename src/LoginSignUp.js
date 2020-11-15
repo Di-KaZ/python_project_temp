@@ -145,6 +145,7 @@ const LoginSignUp = ({ setLogged }) => {
           } else {
             setLogged(true);
             history.push("/");
+            window.location.reload(false);
           }
         });
       });

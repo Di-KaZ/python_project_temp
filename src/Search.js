@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Pearl from "./Pearl";
 import styled from "styled-components";
 import { white } from "material-ui/styles/colors";
@@ -47,12 +47,6 @@ const SearchInput = styled.input`
   resize: none;
 `;
 
-const Message = (props) => {
-  return (
-    <SearchInput maxLength={300} placeholder={"Dis nous tout"} {...props} />
-  );
-};
-
 const SearchI = styled.div`
   cursor: pointer;
   margin-right: 3px;
@@ -74,7 +68,6 @@ const SearchBar = ({ setPearls }) => {
     }).then((response) => {
       response.json().then((json) => {
         setPearls(json);
-        console.log(json);
       });
     });
     setQuery(e.target.value);

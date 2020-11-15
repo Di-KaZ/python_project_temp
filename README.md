@@ -1,4 +1,4 @@
-# python_project_temp
+# Pearls and Jewels
 
 IPI first project in Python + flask
 
@@ -6,87 +6,71 @@ IPI first project in Python + flask
 
 Be able to save all funny and WTF moment of our firends / colleagues in a small catchy sentence or image
 
+## Some screenshots
+
+![login](http://url/to/img.png)
+![home](http://url/to/img.png)
+![search](http://url/to/img.png)
+![account](http://url/to/img.png)
+
 # HOW TO RUN
 
-use virtualenv
+The project have two distinct parts :
+
+- The flask JSON API
+- The React front
+
+You can use a virtualenv to run the the **flask json api** you need these python dependency :
+
+- flask (obviously)
+  ```bash
+  pip3 install flask
+  ```
+- flask_sqlalchemy
+  ```bash
+  pip3 install flask-sqlalchemy
+  ```
+- sqlalchemy
+  ```bash
+  pip3 install sqlalchemy
+  ```
+- python-dotenv
+
+  ```bash
+  pip3 install python-dotenv
+  ```
+
+- jwt
+  ```bash
+  pip3 install jwt
+  ```
+
+now run
 
 ```bash
-source flask_api/env/bin/activate
+cd flask_api && flask run # in the root folder
 ```
 
-then you need to run the react front
+then you need to run the react front (install node.js blah blah...)
 
 ```bash
-yarn start
-```
-
-and the flask api
-
-```bash
-yarn start-api
+npm start # in the root folder
 ```
 
 and youre up and running !
 
 # Features
 
-- account Creation / Login
-- send post (phrase and images)
-- react to post (commentary or emote)
-- filter and search
+## Implemented
 
-# Plus
+- account Creation / Login / Delete / Logout
+- create Pearl (phrase)
+- comment Pearl (and comments)
+- search
+- Pagination
 
-beautiful UI and ability to style post as we like to match the image / sentence
+## Not yet Implemented
 
-# Tables and joins
-
-```mermaid
-classDiagram
-    Users <|-- Comments
-    Users <|-- Pearls
-    Pearls <|-- Comments
-    Associate <|-- Smileys
-    Associate <|-- Pearls
-    Associate <|-- Users
-    Users : +int id
-    Users : +String username
-    Users : +String login
-    Users : +String psw
-    Users: +create()
-    Users: +login()
-    Users: +update()
-    Users: +delete()
-
-    class Comments{
-      +int id
-      +int id_user
-      +int id_pearl
-      +String commentaire
-      +create()
-      +update()
-      +delete()
-    }
-    class Pearls{
-      +int id
-      +int id_user
-      +String content
-      +datetime date
-      +create()
-      +update()
-      +delete()
-    }
-    class Smileys{
-      +int id
-      +String alt_name
-      +String img_link
-      +create()
-      +delete()
-    }
-    class Associate{
-      +int id
-      +int id_users
-      +int id_smileys
-      +int id_pearls
-    }
-```
+- reactions to Pearls
+- formating in Pearl (colors line break ect)
+- image in pearls

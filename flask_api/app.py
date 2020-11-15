@@ -6,17 +6,12 @@ from flask import Flask, request, make_response, jsonify
 from sqlalchemy import Column, String, Integer, ForeignKey, DateTime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///model.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = False
 app.config['SECRET_KEY'] = 'configurestrongsecretkeyhere'
 db = SQLAlchemy(app)
-
-# Create new db if not existing
-db.create_all()
-
 
 """
 *** CLASSES Database model
@@ -42,7 +37,7 @@ class Pearl(db.Model):
             "id" : self.id,
             "user_id" : self.user_id,
             "content" : self.content,
-            "date" : self.date,
+            "date" : self.date.strftime('%d %B %Y a %Hh%M'),
             "username" : username
         }
 
@@ -95,6 +90,8 @@ class AssoUser(db.Model):
     user_id = Column(String, ForeignKey(User.id), primary_key=True)
     granted_id = Column(String, ForeignKey(Grant.id), primary_key=True)
 
+# Create new db if not existing
+db.create_all()
 
 # Utils
 def get_user_from_token(token, secret_key):
@@ -143,7 +140,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return check_login
 
-
 @app.route("/register", methods=["POST"])
 def register():
     logs = request.get_json()
@@ -155,7 +151,6 @@ def register():
         return jsonify({'message': 'Votre compte a ete cree'}), 200
     except Exception as e:
         return jsonify({"error": "une erreur est intervenue"}), 500
-
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -169,16 +164,16 @@ def login():
         return response
     return jsonify({'error': 'username or password incorrect'}), 500
 
-
 @app.route('/profile', methods=["POST"])
+@login_required
 def profile():
     data = request.get_json()
     try:
         user = get_user_from_token(data['token'], app.config['SECRET_KEY'])
-        return jsonify({'username': user.username,'password': user.password, 'date_creation': user.date_creation}), 200
+        return jsonify({'username': user.username,'password': user.password, 'date_creation': user.date_creation.strftime('%d %B %Y')}), 200
     except Exception as e:
+        print(e)
         return jsonify({'error': 'unexcpected error '}), 401
-
 
 @app.route('/delete_account', methods=["POST"])
 @login_required
@@ -192,7 +187,6 @@ def delete_account():
             return jsonify({'message': 'account deleted !'}), 200
     except Exception as e:
         return jsonify({'error': 'unexpected error '}), 401
-
 
 @app.route("/create_pearl", methods=["POST"])
 @login_required
@@ -213,7 +207,7 @@ def get_pearls():
     try:
         pearls = []
         for i in range(1, logs['page'] + 1):
-            pearls.append(db.session.query(Pearl).order_by(Pearl.date.desc()).paginate(page=i, per_page=100, error_out=False))
+            pearls.append(db.session.query(Pearl).order_by(Pearl.date.asc()).paginate(page=i, per_page=100, error_out=False))
         return jsonify(jsonify_query(pearls)), 200
     except Exception as e:
         return jsonify([]), 500
