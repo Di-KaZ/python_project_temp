@@ -54,7 +54,7 @@ cd flask_api && flask run # in the root folder
 then you need to run the react front (install node.js blah blah...)
 
 ```bash
-npm start # in the root folder
+npm i && npm start # in the root folder
 ```
 
 and youre up and running !
