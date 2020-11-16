@@ -41,13 +41,14 @@ class Pearl(db.Model):
             "username" : username
         }
 
+# NOT YET USED
 class Smiley(db.Model):
     __tablename__ = "Smileys"
     id = Column(String, primary_key=True)
     smiley = Column(String(1), nullable=False)
     pearl_id = Column(Integer, ForeignKey('PearlsAndJewels.id'))
 
-
+# NOT YET USED
 class AssoSmiley(db.Model):
     __tablename__ = "Association_Smiley"
     user_id = Column(Integer, ForeignKey('Users.id'), primary_key=True)
@@ -158,7 +159,8 @@ def login():
 
     user = db.session.query(User).filter(User.username == logs['userName']).first()
     if user and check_password_hash(user.password, logs['password']):
-        token = jwt.encode({'user': logs['userName'], 'exp': datetime.utcnow() + timedelta(minutes=30)}, app.config['SECRET_KEY'])
+        token = jwt.encode({'user': logs['userName'], 'exp': datetime.utcnow() +
+                                timedelta(minutes=30)}, app.config['SECRET_KEY'])
         response = make_response({"message": "user logged in"})
         response.set_cookie('token', token.decode('UTF-8'))
         return response
@@ -170,7 +172,9 @@ def profile():
     data = request.get_json()
     try:
         user = get_user_from_token(data['token'], app.config['SECRET_KEY'])
-        return jsonify({'username': user.username,'password': user.password, 'date_creation': user.date_creation.strftime('%d %B %Y')}), 200
+        return jsonify({'username': user.username,
+                        'password': user.password,
+                        'date_creation': user.date_creation.strftime('%d %B %Y')}), 200
     except Exception as e:
         print(e)
         return jsonify({'error': 'unexcpected error '}), 401
@@ -207,7 +211,8 @@ def get_pearls():
     try:
         pearls = []
         for i in range(1, logs['page'] + 1):
-            pearls.append(db.session.query(Pearl).order_by(Pearl.date.asc()).paginate(page=i, per_page=100, error_out=False))
+            pearls.append(db.session.query(Pearl).order_by(Pearl.date.asc()
+                                                ).paginate(page=i, per_page=100, error_out=False))
         return jsonify(jsonify_query(pearls)), 200
     except Exception as e:
         return jsonify([]), 500

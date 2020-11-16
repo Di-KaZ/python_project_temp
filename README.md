@@ -20,6 +20,8 @@ The project have two distinct parts :
 - The flask JSON API
 - The React front
 
+## JSON API
+
 You can use a virtualenv to run the the **flask json api** you need these python dependency :
 
 - flask (obviously)
@@ -51,11 +53,15 @@ now run
 cd flask_api && flask run # in the root folder
 ```
 
+## REACT FRONT
+
 then you need to run the react front (install node.js blah blah...)
 
 ```bash
 npm i && npm start # in the root folder
 ```
+
+> Note : They should be run at the same time in two different terminal
 
 and youre up and running !
 
