@@ -147,7 +147,8 @@ def register():
     if logs['password'] != logs['passwordBis']:
         return jsonify({'error': 'Les mots de passe ne correspondent pas.'}), 500
     try:
-        db.session.add(User(username=logs['userName'], password=generate_password_hash(logs['password'])))
+        db.session.add(User(username=logs['userName'],
+        password=generate_password_hash(logs['password'])))
         db.session.commit()
         return jsonify({'message': 'Votre compte a ete cree'}), 200
     except Exception as e:
@@ -174,7 +175,8 @@ def profile():
         user = get_user_from_token(data['token'], app.config['SECRET_KEY'])
         return jsonify({'username': user.username,
                         'password': user.password,
-                        'date_creation': user.date_creation.strftime('%d %B %Y')}), 200
+                        'date_creation': user.date_creation.strftime('%d %B %Y')
+                        }), 200
     except Exception as e:
         print(e)
         return jsonify({'error': 'unexcpected error '}), 401
@@ -212,7 +214,8 @@ def get_pearls():
         pearls = []
         for i in range(1, logs['page'] + 1):
             pearls.append(db.session.query(Pearl).order_by(Pearl.date.asc()
-                                                ).paginate(page=i, per_page=100, error_out=False))
+                                                ).paginate(page=i, per_page=100,
+                                                            error_out=False))
         return jsonify(jsonify_query(pearls)), 200
     except Exception as e:
         return jsonify([]), 500
@@ -226,11 +229,13 @@ def create_comment():
         id = get_user_from_token(data['token'], app.config['SECRET_KEY']).id
         if 'pearlId' in data.keys(): # if the parent is a pearl
             db.session.add(Comment(user_id=id, pearl_id=data["pearlId"],
-                                    comment_id=None, comment=data["comment"], date=datetime.utcnow()))
+                                    comment_id=None, comment=data["comment"],
+                                    date=datetime.utcnow()))
         else: # it's a comment
             db.session.add(Comment(user_id=id, pearl_id=None,
                                     comment_id=data["commentId"],
-                                    comment=data["comment"], date=datetime.utcnow()))
+                                    comment=data["comment"],
+                                    date=datetime.utcnow()))
         db.session.commit()
         return jsonify({'message': 'Votre commentaire a été crée.'}), 200
     except Exception as e:
@@ -264,7 +269,8 @@ def search():
         pearls = []
         pearls.append(db.session.query(Pearl).filter(Pearl.content.contains(data['search'])
                                             ).order_by(Pearl.date.desc()
-                                            ).paginate(page=1, per_page=100, error_out=False))
+                                            ).paginate(page=1, per_page=100,
+                                                        error_out=False))
         return jsonify(jsonify_query(pearls)), 200
     except Exception as e:
         return jsonify([]), 500
