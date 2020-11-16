@@ -213,7 +213,7 @@ def get_pearls():
     try:
         pearls = []
         for i in range(1, logs['page'] + 1):
-            pearls.append(db.session.query(Pearl).order_by(Pearl.date.asc()
+            pearls.append(db.session.query(Pearl).order_by(Pearl.date.desc()
                                                 ).paginate(page=i, per_page=100,
                                                             error_out=False))
         return jsonify(jsonify_query(pearls)), 200
