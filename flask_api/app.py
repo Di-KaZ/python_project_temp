@@ -34,13 +34,12 @@ class Pearl(db.Model):
     date = Column(DateTime, default=datetime.utcnow())
 
     def to_json(self):
-        user = db.session.query(User).filter_by(id=self.user_id).first()
         return {
             'id': self.id,
             'user_id': self.user_id,
             'content': self.content,
             'date': self.date.strftime('%d %B %Y a %Hh%M'),
-            'username': user.username,
+            'username': db.session.query(User).get(self.user_id).username,
         }
 
 
@@ -55,10 +54,9 @@ class Comment(db.Model):
     date = Column(String(200), nullable=False)
 
     def to_json(self):
-        user = db.session.query(User).filter_by(id=self.user_id).first()
         return {
             'id': self.id,
-            'username': user.username,
+            'username': db.session.query(User).get(self.user_id).username,
             'pearl_id': self.pearl_id,
             'comment_id': self.comment_id,
             'comment': self.comment,
@@ -103,11 +101,7 @@ def get_user_from_token(token, secret_key):
 
 def jsonify_query(pages):
     """Take a list of page object and return json of it."""
-    jsons = []
-    for page in pages:
-        for item in page.items:
-            jsons.append(item.to_json())
-    return jsons
+    return [item.to_json() for page in pages for item in page.items]
 
 
 # JSON API Route
@@ -224,8 +218,8 @@ def get_pearls():
         pearls = []
         for i in range(1, logs['page'] + 1):
             pearls.append(
-                db.session.query(Pearl).
-                order_by(Pearl.date.desc())
+                db.session.query(Pearl)
+                .order_by(Pearl.date.desc())
                 .paginate(page=i, per_page=100, error_out=False))
         return jsonify(jsonify_query(pearls)), 200
     except Exception:
@@ -238,14 +232,10 @@ def create_comment():
     data = request.get_json()
     try:
         user = get_user_from_token(data['token'], app.config['SECRET_KEY'])
-        if 'pearlId' in data.keys():  # if the parent is a pearl
-            db.session.add(Comment(
-                user_id=user.id, pearl_id=data['pearlId'], comment_id=None,
-                comment=data['comment'], date=datetime.utcnow()))
-        else:  # it's a comment
-            db.session.add(Comment(
-                user_id=id, pearl_id=None, comment_id=data['commentId'],
-                comment=data['comment'], date=datetime.utcnow()))
+        db.session.add(Comment(
+            user_id=user.id, pearl_id=data.get('pearlId'),
+            comment_id=data.get('commentId'), comment=data['comment'],
+            date=datetime.utcnow()))
         db.session.commit()
         return jsonify({'message': 'Votre commentaire a été crée.'}), 200
     except Exception:
@@ -261,19 +251,13 @@ def get_comment():
     try:
         comments = []
         for i in range(1, logs['page'] + 1):
-            if 'pearlId' in logs.keys():
-                comments.append(
-                    db.session.query(Comment)
-                    .filter_by(pearl_id=logs['pearlId'])
-                    .order_by(Comment.date.desc())
-                    .paginate(page=i, per_page=100))
-            else:
-                comments.append(
-                    db.session.query(Comment)
-                    .filter_by(comment_id=logs['commentId'])
-                    .order_by(Comment.date.desc())
-                    .paginate(page=i, per_page=100))
-            return jsonify(jsonify_query(comments)), 200
+            comments.append(
+                db.session.query(Comment)
+                .filter_by(pearl_id=logs.get('pearlId'))
+                .filter_by(comment_id=logs.get('commentId'))
+                .order_by(Comment.date.desc())
+                .paginate(page=i, per_page=1))
+        return jsonify(jsonify_query(comments)), 200
     except Exception:
         return jsonify({'error': 'Une erreur est internevue'}), 500
 
@@ -282,12 +266,11 @@ def get_comment():
 def search():
     data = request.get_json()
     try:
-        pearls = []
-        pearls.append(
+        pearls = [
             db.session.query(Pearl)
             .filter(Pearl.content.contains(data['search']))
             .order_by(Pearl.date.desc())
-            .paginate(page=1, per_page=100, error_out=False))
+            .paginate(page=1, per_page=100, error_out=False)]
         return jsonify(jsonify_query(pearls)), 200
     except Exception:
         return jsonify([]), 500
