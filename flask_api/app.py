@@ -248,15 +248,15 @@ def create_comment():
 @app.route('/get_comment', methods=['POST'])
 def get_comment():
     logs = request.get_json()
+    comments = []
     try:
-        comments = []
         for i in range(1, logs['page'] + 1):
             comments.append(
                 db.session.query(Comment)
                 .filter_by(pearl_id=logs.get('pearlId'))
                 .filter_by(comment_id=logs.get('commentId'))
                 .order_by(Comment.date.desc())
-                .paginate(page=i, per_page=1))
+                .paginate(page=i, per_page=100))
         return jsonify(jsonify_query(comments)), 200
     except Exception:
         return jsonify({'error': 'Une erreur est internevue'}), 500
